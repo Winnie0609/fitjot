@@ -32,6 +32,7 @@ alwaysApply: true
 
 ## UI Component Guidelines
 
+- install component with `pnpm dlx shadcn@latest add xxx`
 - Use shadcn/ui components from `@/components/ui/`
 - Import pattern: `import { Button } from "@/components/ui/button"`
 - Available components based on standard shadcn/ui:
@@ -80,6 +81,7 @@ alwaysApply: true
 - Prefer server components by default, use "use client" only when needed
 - Use TypeScript strict mode
 - Follow Next.js App Router patterns
+- Comment in English
 
 ## Package Management
 
