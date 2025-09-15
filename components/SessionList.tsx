@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Edit, Frown,Meh, Smile, Trash2 } from 'lucide-react';
+import { Edit, Frown, Meh, Smile, Trash2 } from 'lucide-react';
 
 import {
   Card,

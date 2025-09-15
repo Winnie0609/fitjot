@@ -61,7 +61,9 @@ function Header({ handleAddNew }: HeaderProps) {
               <Avatar>
                 {/* <AvatarImage src={user?.photoURL || ''} /> */}
                 <AvatarFallback>
-                  {getInitials(user?.displayName)}
+                  <div className="text-xs">
+                    {getInitials(user?.displayName)}
+                  </div>
                 </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
