@@ -13,10 +13,10 @@ import {
 } from 'lucide-react';
 import { ElementType, useEffect, useState } from 'react';
 import {
+  type Control,
   Resolver,
   useFieldArray,
   useForm,
-  type Control,
 } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -54,27 +54,28 @@ import { cn } from '@/lib/utils';
 const setSchema = z.object({
   id: z.string(),
   reps: z.preprocess(
-    (val) => (String(val).trim() === '' ? NaN : Number(val)),
-    z.number().min(0)
+    (val) => (String(val).trim() === '' ? 0 : Number(val)),
+    z.number().min(0).default(0)
   ),
   weight: z.preprocess(
-    (val) => (String(val).trim() === '' ? NaN : Number(val)),
-    z.number().min(0)
+    (val) => (String(val).trim() === '' ? 0 : Number(val)),
+    z.number().min(0).default(0)
   ),
 });
 
 const exerciseSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Exercise name is required.'),
-  rpe: z.preprocess(
-    (val) => (String(val).trim() === '' ? undefined : Number(val)),
-    z.number().optional()
-  ),
+  rpe: z
+    .preprocess(
+      (val) => (String(val).trim() === '' ? undefined : Number(val)),
+      z.number().optional()
+    )
+    .optional(),
   sets: z.array(setSchema).min(1, 'Add at least one set.'),
 });
 
 const sessionSchema = z.object({
-  id: z.string(),
   date: z.date(),
   mood: z.enum(['happy', 'neutral', 'sad']),
   notes: z.string().optional(),
@@ -121,7 +122,6 @@ export function SessionForm({
     defaultValues:
       initialData ||
       (() => ({
-        id: crypto.randomUUID(),
         date: new Date(),
         exercises: [createNewExercise()],
         mood: 'happy',
@@ -282,7 +282,9 @@ export function SessionForm({
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">Save Session</Button>
+            <Button disabled={form.formState.isSubmitting} type="submit">
+              {form.formState.isSubmitting ? 'Saving...' : 'Save Session'}
+            </Button>
           </div>
         </form>
       </Form>

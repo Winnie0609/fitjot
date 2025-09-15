@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
+import { FullScreenLoader } from '@/components/FullScreenLoader';
+import { SessionForm } from '@/components/SessionForm';
+import { SessionList } from '@/components/SessionList';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,10 +18,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { SessionForm } from '@/components/SessionForm';
-import { SessionList } from '@/components/SessionList';
-import { Session } from '@/lib/types';
-import { saveSessions, getSessions } from '@/lib/storage';
+import { useAuth } from '@/lib/AuthContext';
+import {
+  addWorkoutSession,
+  deleteWorkoutSession,
+  getWorkoutSessions,
+  updateWorkoutSession,
+} from '@/lib/db';
+import {
+  type ExerciseDocument,
+  type Session,
+  type WorkoutSessionDocument,
+} from '@/lib/types';
+
 import Header from './Header';
 import { Button } from './ui/button';
 
@@ -27,10 +39,35 @@ export function WorkoutDashboard() {
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    setSessions(getSessions());
-  }, []);
+    if (authLoading) return;
+    if (!user) {
+      setIsLoading(false);
+      setSessions([]); // Clear sessions on logout
+      return;
+    }
+
+    const fetchSessions = async () => {
+      setIsLoading(true);
+      try {
+        const userSessions: Session[] = await getWorkoutSessions({
+          userId: user.uid,
+        });
+        setSessions(userSessions);
+      } catch (error) {
+        console.error('Failed to fetch sessions:', error);
+        toast.error('Could not load sessions. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSessions();
+  }, [user, authLoading]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -46,22 +83,71 @@ export function WorkoutDashboard() {
     };
   }, [isFormOpen]);
 
-  const handleSaveSession = (session: Session) => {
-    const isEditing = sessions.some((s) => s.id === session.id);
-    let updatedSessions;
-
-    if (isEditing) {
-      updatedSessions = sessions.map((s) =>
-        s.id === session.id ? session : s
-      );
-    } else {
-      updatedSessions = [...sessions, session];
+  const handleSaveSession = async (formData: Omit<Session, 'id'>) => {
+    if (!user) {
+      toast.error('You must be logged in to save a session.');
+      return;
     }
-    setSessions(updatedSessions);
-    saveSessions(updatedSessions);
 
-    handleFormClose();
-    toast.success(`Session for ${format(session.date, 'P')} has been saved.`);
+    // Convert form data to the Firestore document structure, ensuring no undefined values are sent.
+    const sessionDocument: Omit<WorkoutSessionDocument, 'id'> = {
+      userId: user.uid,
+      date: formData.date,
+      exercises: formData.exercises.map((ex): ExerciseDocument => {
+        const exerciseData: ExerciseDocument = {
+          id: ex.id,
+          name: ex.name,
+          sets: ex.sets,
+        };
+        if (ex.rpe !== undefined) {
+          exerciseData.rpe = ex.rpe;
+        }
+        return exerciseData;
+      }),
+    };
+
+    if (formData.mood) {
+      sessionDocument.mood = formData.mood;
+    }
+    if (formData.notes) {
+      sessionDocument.notes = formData.notes;
+    }
+
+    try {
+      if (editingSession?.id) {
+        // Update existing session
+        await updateWorkoutSession({
+          sessionId: editingSession.id,
+          userId: user.uid,
+          sessionData: sessionDocument as WorkoutSessionDocument,
+        });
+        setSessions(
+          sessions.map((s) =>
+            s.id === editingSession.id
+              ? { ...formData, id: editingSession.id }
+              : s
+          )
+        );
+        toast.success(
+          `Session for ${format(formData.date, 'P')} has been updated.`
+        );
+      } else {
+        // Create new session
+        const newDocRef = await addWorkoutSession({
+          userId: user.uid,
+          sessionData: sessionDocument as WorkoutSessionDocument,
+        });
+
+        setSessions([...sessions, { ...formData, id: newDocRef.id }]);
+        toast.success(
+          `Session for ${format(formData.date, 'P')} has been saved.`
+        );
+      }
+      handleFormClose();
+    } catch (error) {
+      console.error('Failed to save session:', error);
+      toast.error('Failed to save session. Please try again.');
+    }
   };
 
   const handleEditSession = (session: Session) => {
@@ -76,17 +162,20 @@ export function WorkoutDashboard() {
     }
   };
 
-  const performDelete = () => {
-    if (!sessionToDelete) return;
+  const performDelete = async () => {
+    if (!sessionToDelete || !sessionToDelete.id) return;
 
-    const updatedSessions = sessions.filter((s) => s.id !== sessionToDelete.id);
-    setSessions(updatedSessions);
-    saveSessions(updatedSessions);
-
-    toast.error(
-      `Session for ${format(sessionToDelete.date, 'P')} has been deleted.`
-    );
-    setSessionToDelete(null); // Close the dialog
+    try {
+      await deleteWorkoutSession({ sessionId: sessionToDelete.id });
+      setSessions(sessions.filter((s) => s.id !== sessionToDelete.id));
+      toast.error(
+        `Session for ${format(sessionToDelete.date, 'P')} has been deleted.`
+      );
+      setSessionToDelete(null); // Close the dialog
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      toast.error('Failed to delete session. Please try again.');
+    }
   };
 
   const handleAddNew = () => {
@@ -98,6 +187,10 @@ export function WorkoutDashboard() {
     setIsFormOpen(false);
     setEditingSession(null);
   };
+
+  if (authLoading || isLoading) {
+    return <FullScreenLoader />;
+  }
 
   return (
     <>
