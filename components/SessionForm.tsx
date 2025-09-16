@@ -50,6 +50,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Session } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const setSchema = z.object({
   id: z.string(),
@@ -147,8 +148,14 @@ export function SessionForm({
   }, [initialData, form]);
 
   const onSubmit = (data: SessionFormData) => {
-    onSave(data);
+    try {
+      onSave(data);
+    } catch (error) {
+      toast.error('Failed to save session');
+    }
   };
+
+  const { isSubmitting } = form.formState;
 
   return (
     <>
@@ -279,11 +286,16 @@ export function SessionForm({
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-6">
-            <Button type="button" variant="ghost" onClick={onClose}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button disabled={form.formState.isSubmitting} type="submit">
-              {form.formState.isSubmitting ? 'Saving...' : 'Save Session'}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save Session'}
             </Button>
           </div>
         </form>
@@ -348,7 +360,7 @@ function ExerciseField({
           control={control}
           name={`exercises.${exIndex}.name`}
           render={({ field }) => (
-            <FormItem className="flex-1">
+            <FormItem data-testid="exercise-name-input" className="flex-1">
               <FormLabel className="text-xs text-muted-foreground">
                 Exercise Name
               </FormLabel>
@@ -363,7 +375,7 @@ function ExerciseField({
           control={control}
           name={`exercises.${exIndex}.rpe`}
           render={({ field }) => (
-            <FormItem>
+            <FormItem data-testid="rpe-input">
               <FormLabel className="text-xs text-muted-foreground">
                 RPE
               </FormLabel>
@@ -403,7 +415,7 @@ function ExerciseField({
               control={control}
               name={`exercises.${exIndex}.sets.${setIndex}.reps`}
               render={({ field }) => (
-                <FormItem className="flex-1">
+                <FormItem data-testid="reps-input" className="flex-1">
                   <FormControl>
                     <Input type="number" placeholder="12" {...field} />
                   </FormControl>
@@ -414,7 +426,7 @@ function ExerciseField({
               control={control}
               name={`exercises.${exIndex}.sets.${setIndex}.weight`}
               render={({ field }) => (
-                <FormItem className="flex-1">
+                <FormItem data-testid="weight-input" className="flex-1">
                   <FormControl>
                     <Input type="number" placeholder="50" {...field} />
                   </FormControl>
@@ -426,6 +438,7 @@ function ExerciseField({
               variant="ghost"
               size="icon"
               onClick={() => removeSet(setIndex)}
+              data-testid="delete-set-button"
             >
               <X className="h-4 w-4 text-red-500" />
               <span className="sr-only">Delete Set</span>
@@ -439,6 +452,7 @@ function ExerciseField({
         size="sm"
         className="w-full"
         onClick={() => appendSet(createNewSet())}
+        data-testid="add-set-button"
       >
         <Plus className="h-4 w-4 mr-2" /> Add Set
       </Button>
@@ -448,6 +462,7 @@ function ExerciseField({
         size="sm"
         className="w-full text-red-500 hover:text-red-500"
         onClick={onRemoveRequest}
+        data-testid="remove-exercise-button"
       >
         <Trash2 className="h-4 w-4 mr-2" />
         Remove Exercise

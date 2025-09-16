@@ -4,10 +4,10 @@ import {
   deleteDoc,
   doc,
   getDocs,
-  orderBy, // Added orderBy
+  orderBy,
   query,
   serverTimestamp,
-  Timestamp, // Added Timestamp
+  Timestamp,
   updateDoc,
   where,
 } from 'firebase/firestore';
@@ -52,7 +52,7 @@ const getWorkoutSessions = async ({ userId }: { userId: string }) => {
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map((doc) => {
     const data = doc.data() as WorkoutSessionDocument;
-    // Convert Firestore Timestamp to JS Date object right here
+    // Convert Firestore Timestamp to JS Date object
     return {
       ...data,
       id: doc.id,
