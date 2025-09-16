@@ -52,13 +52,13 @@ function Header({ handleAddNew }: HeaderProps) {
       <div className="flex justify-between items-center mb-4 w-full">
         <h1 className="text-2xl font-bold">Workout Log</h1>
         <div className="flex items-center space-x-2">
-          <Button onClick={handleAddNew}>
+          <Button onClick={handleAddNew} data-testid="add-new-session-button">
             <Plus className="mr-2 h-4 w-4" /> Add New Session
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger className="cursor-pointer">
-              <Avatar>
+              <Avatar data-testid="user-avatar">
                 {/* <AvatarImage src={user?.photoURL || ''} /> */}
                 <AvatarFallback>
                   <div className="text-xs">
