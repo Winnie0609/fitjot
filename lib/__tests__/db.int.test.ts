@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeAll, afterEach } from 'vitest';
-import { addWorkoutSession, getWorkoutSessions } from '../db';
-import { db, auth } from '../../lib/firebase';
-import { collection, getDocs, deleteDoc } from 'firebase/firestore';
-import { WorkoutSessionDocument } from '../../lib/types';
 import { signInAnonymously } from 'firebase/auth';
+import { collection, deleteDoc,getDocs } from 'firebase/firestore';
+import { afterEach,beforeAll, describe, expect, it } from 'vitest';
+
+import { auth,db } from '../../lib/firebase';
+import { WorkoutSessionDocument } from '../../lib/types';
+import { addWorkoutSession, getWorkoutSessions } from '../db';
 
 // Helper function to clear all data in the emulator
 const clearFirestore = async () => {

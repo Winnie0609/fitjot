@@ -1,10 +1,11 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
-import { SessionForm } from '../SessionForm';
-
 // SessionForm uses hooks that need a Form provider, so we create a helper component
 import { useForm } from 'react-hook-form';
+import { describe, expect, it } from 'vitest';
+
 import { Form } from '@/components/ui/form';
+
+import { SessionForm } from '../SessionForm';
 
 // A helper component to wrap SessionForm with the necessary Form context
 const TestWrapper = ({ initialData = null }) => {
