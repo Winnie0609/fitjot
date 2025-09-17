@@ -1,7 +1,7 @@
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import { initializeApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { connectAuthEmulator, getAuth } from 'firebase/auth';
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -25,4 +25,4 @@ if (process.env.NODE_ENV === 'test') {
 
 const analytics = isSupported().then((yes) => (yes ? getAnalytics(app) : null));
 
-export { app, db, analytics, auth };
+export { analytics, app, auth,db };
