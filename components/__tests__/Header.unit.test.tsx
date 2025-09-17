@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import Header from '../Header';
 
 // This setup is now handled by vitest.setup.unit.ts, but we keep it here
