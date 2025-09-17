@@ -3,19 +3,59 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   Timestamp,
   updateDoc,
   where,
 } from 'firebase/firestore';
 
 import { db } from './firebase';
-import { WorkoutSessionDocument } from './types';
+import { UserProfile, WorkoutSessionDocument } from './types';
 
 const WORKOUT_SESSIONS_COLLECTION = 'workout_sessions';
+const USERS_COLLECTION = 'users';
+
+/**
+ * Function to add a user to the database
+ * add, get, update
+ */
+
+const addUserToDb = async ({
+  userId,
+  userData,
+}: {
+  userId: string;
+  userData: UserProfile;
+}) => {
+  const data = {
+    ...userData,
+    uid: userId,
+    createdAt: serverTimestamp(),
+  };
+
+  // if document already exists, skip it
+  const userInDb = await getDoc(doc(db, USERS_COLLECTION, userId));
+  if (userInDb.exists()) {
+    return;
+  }
+
+  try {
+    await setDoc(doc(db, USERS_COLLECTION, userId), data);
+  } catch (error) {
+    console.error('Error adding user to db:', error);
+    throw error;
+  }
+};
+
+/**
+ * Function to handle a workout session in the database
+ * add, get, update, delete
+ */
 
 const addWorkoutSession = async ({
   userId,
@@ -29,7 +69,6 @@ const addWorkoutSession = async ({
     userId: userId,
     createdAt: serverTimestamp(),
   };
-
   try {
     const docRef = await addDoc(
       collection(db, WORKOUT_SESSIONS_COLLECTION),
@@ -99,6 +138,7 @@ const deleteWorkoutSession = async ({ sessionId }: { sessionId: string }) => {
 };
 
 export {
+  addUserToDb,
   addWorkoutSession,
   deleteWorkoutSession,
   getWorkoutSessions,

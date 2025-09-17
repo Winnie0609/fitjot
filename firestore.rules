@@ -12,5 +12,14 @@ service cloud.firestore {
       // and the existing document's userId matches their own uid.
       allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
+
+    match /users/{userId} {
+      // A user can create their own document, but not anyone else's.
+      // The document ID must match the user's auth UID.
+      allow create: if request.auth.uid == userId;
+
+      // A user can only read and update their own document.
+      allow read, update: if request.auth.uid == userId;
+    }
   }
 }

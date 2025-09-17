@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { Loader } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -53,7 +53,9 @@ export function ForgotPasswordForm({
         'A password reset link has been sent to your email address.'
       );
       router.push('/login');
-    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+       
       console.error(error.code, error.message);
       if (error.code === 'auth/user-not-found') {
         toast.error('No user found with this email address.');
@@ -98,7 +100,7 @@ export function ForgotPasswordForm({
                 className="w-full"
               >
                 {form.formState.isSubmitting ? (
-                  <Loader className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
                   'Send Reset Link'
                 )}

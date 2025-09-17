@@ -2,20 +2,14 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { Loader } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -26,6 +20,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
+import { addUserToDb } from '@/lib/db';
 import { auth } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 
@@ -75,6 +70,15 @@ export function SignUpForm({
         displayName: `${values.firstName} ${values.lastName}`,
       });
 
+      await addUserToDb({
+        userId: userCredential.user.uid,
+        userData: {
+          uid: userCredential.user.uid,
+          email: values.email,
+          displayName: `${values.firstName} ${values.lastName}`,
+        },
+      });
+
       toast.success('You have successfully signed up!');
       router.push('/');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -84,6 +88,7 @@ export function SignUpForm({
         toast.error('The email address is already in use by another account.');
       } else {
         toast.error(error.message);
+        toast.error('There was an error signing up. Please try again.');
       }
     }
   };
@@ -93,10 +98,9 @@ export function SignUpForm({
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Hi there!</CardTitle>
-          <CardDescription>Sign up with your Google account</CardDescription>
         </CardHeader>
         <CardContent>
-          <GoogleLoginButton />
+          <GoogleLoginButton isLogin={false} />
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -187,7 +191,7 @@ export function SignUpForm({
                   className="w-full"
                 >
                   {form.formState.isSubmitting ? (
-                    <Loader className="w-4 h-4 mr-2" />
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
                     'Sign up'
                   )}
