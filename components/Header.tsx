@@ -21,10 +21,11 @@ import { Button } from './ui/button';
 
 interface HeaderProps {
   handleAddNew: () => void;
+  handleAddNewRecord: () => void;
 }
 
 const getInitials = (name?: string | null) => {
-  if (!name) return '??';
+  if (!name) return '';
   return name
     .split(' ')
     .map((n) => n[0])
@@ -32,7 +33,7 @@ const getInitials = (name?: string | null) => {
     .join('');
 };
 
-function Header({ handleAddNew }: HeaderProps) {
+function Header({ handleAddNew, handleAddNewRecord }: HeaderProps) {
   const { user } = useAuth();
   const router = useRouter();
 
@@ -52,8 +53,26 @@ function Header({ handleAddNew }: HeaderProps) {
       <div className="flex justify-between items-center mb-4 w-full">
         <h1 className="text-2xl font-bold">Workout Log</h1>
         <div className="flex items-center space-x-2">
+          <div onClick={() => router.push('/')} className="cursor-pointer">
+            Workout session
+          </div>
+          <div
+            onClick={() => router.push('/inbody')}
+            className="cursor-pointer"
+          >
+            InBody
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
           <Button onClick={handleAddNew} data-testid="add-new-session-button">
             <Plus className="mr-2 h-4 w-4" /> Add New Session
+          </Button>
+
+          <Button
+            onClick={handleAddNewRecord}
+            data-testid="add-new-record-button"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Add New Record
           </Button>
 
           <DropdownMenu>

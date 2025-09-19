@@ -18,6 +18,7 @@ import {
   useFieldArray,
   useForm,
 } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 import {
@@ -48,9 +49,14 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { Session } from '@/lib/types';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { useAuth } from '@/lib/AuthContext';
+import { addWorkoutSession, updateWorkoutSession } from '@/lib/db';
+import {
+  type ExerciseDocument,
+  type Session,
+  type WorkoutSessionDocument,
+} from '@/lib/types';
+import { cn, deepClean } from '@/lib/utils';
 
 const setSchema = z.object({
   id: z.string(),
@@ -106,17 +112,18 @@ const moods: { name: NonNullable<Session['mood']>; icon: ElementType }[] = [
 ];
 
 interface SessionFormProps {
-  onSave: (session: SessionFormData) => void;
+  onSaved: (session: Session) => void;
   onClose: () => void;
   initialData?: Session | null;
 }
 
 export function SessionForm({
-  onSave,
+  onSaved,
   onClose,
   initialData,
 }: SessionFormProps) {
   const [exerciseToDelete, setExerciseToDelete] = useState<number | null>(null);
+  const { user } = useAuth();
 
   const form = useForm<SessionFormData>({
     resolver: zodResolver(sessionSchema) as Resolver<SessionFormData>,
@@ -147,11 +154,60 @@ export function SessionForm({
     }
   }, [initialData, form]);
 
-  const onSubmit = (data: SessionFormData) => {
+  const onSubmit = async (formData: SessionFormData) => {
+    if (!user) {
+      toast.error('You must be logged in to save a session.');
+      return;
+    }
+
+    // Build Firestore document, stripping undefineds
+    const sessionDocument: Omit<WorkoutSessionDocument, 'id'> = {
+      uid: user.uid,
+      date: formData.date,
+      exercises: formData.exercises.map((ex): ExerciseDocument => {
+        const exerciseData: ExerciseDocument = {
+          id: ex.id,
+          name: ex.name,
+          sets: ex.sets,
+        };
+        if (ex.rpe !== undefined) {
+          exerciseData.rpe = ex.rpe;
+        }
+        return exerciseData;
+      }),
+    };
+    if (formData.mood) sessionDocument.mood = formData.mood;
+    if (formData.notes) sessionDocument.notes = formData.notes;
+
     try {
-      onSave(data);
+      if (initialData?.id) {
+        await updateWorkoutSession({
+          sessionId: initialData.id,
+          uid: user.uid,
+          sessionData: sessionDocument as WorkoutSessionDocument,
+        });
+
+        onSaved(deepClean({ ...formData, id: initialData.id }));
+        toast.success(
+          `Session for ${format(
+            formData.date,
+            'dd MMM yyyy'
+          )} has been updated.`
+        );
+      } else {
+        const newDocRef = await addWorkoutSession({
+          uid: user.uid,
+          sessionData: sessionDocument as WorkoutSessionDocument,
+        });
+        onSaved(deepClean({ ...formData, id: newDocRef.id }));
+        toast.success(
+          `Session for ${format(formData.date, 'dd MMM yyyy')} has been saved.`
+        );
+      }
+      onClose();
     } catch (error) {
-      toast.error('Failed to save session');
+      console.error('Failed to save workout session:', error);
+      toast.error('Failed to save record. Please try again.');
     }
   };
 
@@ -182,7 +238,7 @@ export function SessionForm({
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {field.value ? (
-                              format(field.value, 'P')
+                              format(field.value, 'dd MMM yyyy')
                             ) : (
                               <span>Pick a date</span>
                             )}
@@ -200,7 +256,7 @@ export function SessionForm({
                     <Input
                       type="time"
                       className="w-[110px]"
-                      value={format(field.value, 'HH:mm')}
+                      value={format(field.value, 'HH:mm:ss')}
                       onChange={(e) => {
                         const newDate = new Date(field.value);
                         const [hours, minutes] = e.target.value
@@ -283,6 +339,8 @@ export function SessionForm({
               </FormItem>
             )}
           />
+
+          {/* TODO: advanced options: unit selection and lesson type(with coach option) */}
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-6">
