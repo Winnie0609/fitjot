@@ -65,7 +65,7 @@ export function LoginForm({
       router.push('/');
 
       await addUserToDb({
-        userId: user.uid,
+        uid: user.uid,
         userData: {
           uid: user.uid,
           email: values.email,

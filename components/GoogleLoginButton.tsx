@@ -38,7 +38,7 @@ export function GoogleLoginButton({ isLogin }: { isLogin: boolean }) {
 
       try {
         await addUserToDb({
-          userId: user.uid,
+          uid: user.uid,
           userData: {
             uid: user.uid,
             email: user.email,
