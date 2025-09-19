@@ -15,10 +15,15 @@ import {
 } from 'firebase/firestore';
 
 import { db } from './firebase';
-import { UserProfile, WorkoutSessionDocument } from './types';
+import {
+  InBodyDataDocument,
+  UserProfile,
+  WorkoutSessionDocument,
+} from './types';
 
 const WORKOUT_SESSIONS_COLLECTION = 'workout_sessions';
 const USERS_COLLECTION = 'users';
+const IN_BODY_DATA_COLLECTION = 'in_body_data';
 
 /**
  * Function to add a user to the database
@@ -26,30 +31,50 @@ const USERS_COLLECTION = 'users';
  */
 
 const addUserToDb = async ({
-  userId,
+  uid,
   userData,
 }: {
-  userId: string;
+  uid: string;
   userData: UserProfile;
 }) => {
   const data = {
     ...userData,
-    uid: userId,
+    uid: uid,
     createdAt: serverTimestamp(),
   };
 
   // if document already exists, skip it
-  const userInDb = await getDoc(doc(db, USERS_COLLECTION, userId));
+  const userInDb = await getDoc(doc(db, USERS_COLLECTION, uid));
   if (userInDb.exists()) {
     return;
   }
 
   try {
-    await setDoc(doc(db, USERS_COLLECTION, userId), data);
+    await setDoc(doc(db, USERS_COLLECTION, uid), data);
   } catch (error) {
     console.error('Error adding user to db:', error);
     throw error;
   }
+};
+
+const updateUser = async ({
+  uid,
+  userData,
+}: {
+  uid: string;
+  userData: UserProfile;
+}) => {
+  const data = {
+    ...userData,
+    updatedAt: serverTimestamp(),
+  };
+  await updateDoc(doc(db, USERS_COLLECTION, uid), data);
+};
+
+const getUser = async ({ uid }: { uid: string }) => {
+  const docRef = doc(db, USERS_COLLECTION, uid);
+  const docSnap = await getDoc(docRef);
+  return docSnap.data() as UserProfile;
 };
 
 /**
@@ -58,15 +83,15 @@ const addUserToDb = async ({
  */
 
 const addWorkoutSession = async ({
-  userId,
+  uid,
   sessionData,
 }: {
-  userId: string;
+  uid: string;
   sessionData: WorkoutSessionDocument;
 }) => {
   const data = {
     ...sessionData,
-    userId: userId,
+    uid: uid,
     createdAt: serverTimestamp(),
   };
   try {
@@ -81,10 +106,10 @@ const addWorkoutSession = async ({
   }
 };
 
-const getWorkoutSessions = async ({ userId }: { userId: string }) => {
+const getWorkoutSessions = async ({ uid }: { uid: string }) => {
   const q = query(
     collection(db, WORKOUT_SESSIONS_COLLECTION),
-    where('userId', '==', userId),
+    where('uid', '==', uid),
     orderBy('date', 'desc')
   );
 
@@ -102,16 +127,16 @@ const getWorkoutSessions = async ({ userId }: { userId: string }) => {
 
 const updateWorkoutSession = async ({
   sessionId,
-  userId,
+  uid,
   sessionData,
 }: {
   sessionId: string;
-  userId: string;
+  uid: string;
   sessionData: WorkoutSessionDocument;
 }) => {
   const data = {
     ...sessionData,
-    userId: userId,
+    uid: uid,
     updatedAt: serverTimestamp(),
   };
 
@@ -137,10 +162,82 @@ const deleteWorkoutSession = async ({ sessionId }: { sessionId: string }) => {
   }
 };
 
+/*
+ * Functions to handle InBody data in the database
+ * add, get, update, delete
+ */
+
+const addInBodyData = async ({
+  uid,
+  inBodyData,
+}: {
+  uid: string;
+  inBodyData: InBodyDataDocument | Record<string, unknown>;
+}) => {
+  const data = {
+    ...inBodyData,
+    uid: uid,
+    createdAt: serverTimestamp(),
+  } as Record<string, unknown>;
+  const docRef = await addDoc(collection(db, IN_BODY_DATA_COLLECTION), data);
+  return docRef;
+};
+
+const getInBodyData = async ({ uid }: { uid: string }) => {
+  const q = query(
+    collection(db, IN_BODY_DATA_COLLECTION),
+    where('uid', '==', uid),
+    orderBy('createdAt', 'desc')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => {
+    const data = d.data() as Record<string, unknown>;
+    const createdAt =
+      (data.createdAt as Timestamp | undefined)?.toDate?.() ?? undefined;
+    const reportDate =
+      (data.reportDate as Timestamp | Date | undefined) instanceof Timestamp
+        ? (data.reportDate as Timestamp).toDate()
+        : (data.reportDate as Date | undefined);
+    return {
+      id: d.id,
+      ...data,
+      createdAt,
+      reportDate,
+    } as Record<string, unknown> & { id: string };
+  });
+};
+
+const updateInBodyData = async ({
+  recordId,
+  uid,
+  inBodyData,
+}: {
+  recordId: string;
+  uid: string;
+  inBodyData: Partial<InBodyDataDocument> | Record<string, unknown>;
+}) => {
+  const data = {
+    ...inBodyData,
+    uid,
+    updatedAt: serverTimestamp(),
+  } as Record<string, unknown>;
+  await updateDoc(doc(db, IN_BODY_DATA_COLLECTION, recordId), data);
+};
+
+const deleteInBodyData = async ({ recordId }: { recordId: string }) => {
+  await deleteDoc(doc(db, IN_BODY_DATA_COLLECTION, recordId));
+};
+
 export {
+  addInBodyData,
   addUserToDb,
   addWorkoutSession,
+  deleteInBodyData,
   deleteWorkoutSession,
+  getInBodyData,
+  getUser,
   getWorkoutSessions,
+  updateInBodyData,
+  updateUser,
   updateWorkoutSession,
 };
