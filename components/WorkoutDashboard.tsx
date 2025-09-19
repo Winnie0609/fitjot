@@ -1,11 +1,10 @@
 'use client';
 
 import { format } from 'date-fns';
-import { X } from 'lucide-react';
+import { Loader2, Plus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { FullScreenLoader } from '@/components/FullScreenLoader';
 import { SessionForm } from '@/components/SessionForm';
 import { SessionList } from '@/components/SessionList';
 import {
@@ -19,19 +18,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/lib/AuthContext';
-import {
-  addWorkoutSession,
-  deleteWorkoutSession,
-  getWorkoutSessions,
-  updateWorkoutSession,
-} from '@/lib/db';
-import {
-  type ExerciseDocument,
-  type Session,
-  type WorkoutSessionDocument,
-} from '@/lib/types';
+import { deleteWorkoutSession, getWorkoutSessions } from '@/lib/db';
+import { type InBodyDataDocument, type Session } from '@/lib/types';
 
-import Header from './Header';
+import { InBodyForm } from './InBodyForm';
 import { Button } from './ui/button';
 
 export function WorkoutDashboard() {
@@ -40,22 +30,20 @@ export function WorkoutDashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const { user, loading: authLoading } = useAuth();
+  const [isInBodyFormOpen, setIsInBodyFormOpen] = useState(false);
+  const [inBodyData, setInBodyData] = useState<
+    (InBodyDataDocument & { id: string }) | null
+  >(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      setIsLoading(false);
-      setSessions([]); // Clear sessions on logout
-      return;
-    }
+    if (!user) return;
 
     const fetchSessions = async () => {
       setIsLoading(true);
       try {
         const userSessions: Session[] = await getWorkoutSessions({
-          userId: user.uid,
+          uid: user.uid,
         });
         setSessions(userSessions);
       } catch (error) {
@@ -67,87 +55,30 @@ export function WorkoutDashboard() {
     };
 
     fetchSessions();
-  }, [user, authLoading]);
+  }, [user]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         handleFormClose();
+        handleInBodyFormClose();
       }
     };
-    if (isFormOpen) {
+    if (isFormOpen || isInBodyFormOpen) {
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isFormOpen]);
+  }, [isFormOpen, isInBodyFormOpen]);
 
-  const handleSaveSession = async (formData: Omit<Session, 'id'>) => {
-    if (!user) {
-      toast.error('You must be logged in to save a session.');
-      return;
+  const handleSessionSaved = (saved: Session) => {
+    if (editingSession?.id) {
+      setSessions(sessions.map((s) => (s.id === saved.id ? saved : s)));
+    } else {
+      setSessions([...sessions, saved]);
     }
-
-    // Convert form data to the Firestore document structure, ensuring no undefined values are sent.
-    const sessionDocument: Omit<WorkoutSessionDocument, 'id'> = {
-      userId: user.uid,
-      date: formData.date,
-      exercises: formData.exercises.map((ex): ExerciseDocument => {
-        const exerciseData: ExerciseDocument = {
-          id: ex.id,
-          name: ex.name,
-          sets: ex.sets,
-        };
-        if (ex.rpe !== undefined) {
-          exerciseData.rpe = ex.rpe;
-        }
-        return exerciseData;
-      }),
-    };
-
-    if (formData.mood) {
-      sessionDocument.mood = formData.mood;
-    }
-    if (formData.notes) {
-      sessionDocument.notes = formData.notes;
-    }
-
-    try {
-      if (editingSession?.id) {
-        // Update existing session
-        await updateWorkoutSession({
-          sessionId: editingSession.id,
-          userId: user.uid,
-          sessionData: sessionDocument as WorkoutSessionDocument,
-        });
-        setSessions(
-          sessions.map((s) =>
-            s.id === editingSession.id
-              ? { ...formData, id: editingSession.id }
-              : s
-          )
-        );
-        toast.success(
-          `Session for ${format(formData.date, 'P')} has been updated.`
-        );
-      } else {
-        // Create new session
-        const newDocRef = await addWorkoutSession({
-          userId: user.uid,
-          sessionData: sessionDocument as WorkoutSessionDocument,
-        });
-
-        setSessions([...sessions, { ...formData, id: newDocRef.id }]);
-        toast.success(
-          `Session for ${format(formData.date, 'P')} has been saved.`
-        );
-      }
-      handleFormClose();
-    } catch (error) {
-      console.error('Failed to save session:', error);
-      toast.error('Failed to save session. Please try again.');
-    }
+    handleFormClose();
   };
 
   const handleEditSession = (session: Session) => {
@@ -169,7 +100,7 @@ export function WorkoutDashboard() {
       await deleteWorkoutSession({ sessionId: sessionToDelete.id });
       setSessions(sessions.filter((s) => s.id !== sessionToDelete.id));
       toast.error(
-        `Session for ${format(sessionToDelete.date, 'P')} has been deleted.`
+        `Session for ${format(sessionToDelete.date, 'dd MMM yyyy')} has been deleted.`
       );
       setSessionToDelete(null); // Close the dialog
     } catch (error) {
@@ -188,18 +119,70 @@ export function WorkoutDashboard() {
     setEditingSession(null);
   };
 
-  if (authLoading || isLoading) {
-    return <FullScreenLoader />;
+  const handleInBodyFormClose = () => {
+    setIsInBodyFormOpen(false);
+    setInBodyData(null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">Loading sessions...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <>
-      <Header handleAddNew={handleAddNew} />
-      <SessionList
-        sessions={sessions}
-        onEdit={handleEditSession}
-        onDelete={handleDeleteRequest}
-      />
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Workout Sessions</h1>
+            <p className="text-muted-foreground">
+              Track and manage your workout sessions
+            </p>
+          </div>
+
+          <Button onClick={handleAddNew} size="lg">
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Record
+          </Button>
+        </div>
+
+        <SessionList
+          sessions={sessions}
+          onEdit={handleEditSession}
+          onDelete={handleDeleteRequest}
+        />
+      </div>
+
+      {isInBodyFormOpen && (
+        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">
+          <div className="container mx-auto max-w-2xl p-4 md:p-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">
+                {inBodyData ? 'Edit InBody Data' : 'Create a New InBody Data'}
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleInBodyFormClose}
+              >
+                <X className="h-5 w-5" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </div>
+            <InBodyForm
+              onSaved={() => {}}
+              onClose={handleInBodyFormClose}
+              initialData={inBodyData}
+            />
+          </div>
+        </div>
+      )}
 
       {isFormOpen && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">
@@ -214,7 +197,7 @@ export function WorkoutDashboard() {
               </Button>
             </div>
             <SessionForm
-              onSave={handleSaveSession}
+              onSaved={handleSessionSaved}
               onClose={handleFormClose}
               initialData={editingSession}
             />
@@ -231,7 +214,7 @@ export function WorkoutDashboard() {
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
               You are about to delete the workout session from{' '}
-              <b>{sessionToDelete && format(sessionToDelete.date, 'P')}</b>.
+              <b>{sessionToDelete && format(sessionToDelete.date, 'dd MMM yyyy')}</b>.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
