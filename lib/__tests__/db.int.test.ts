@@ -1,8 +1,8 @@
 import { signInAnonymously } from 'firebase/auth';
-import { collection, deleteDoc,getDocs } from 'firebase/firestore';
-import { afterEach,beforeAll, describe, expect, it } from 'vitest';
+import { collection, deleteDoc, getDocs } from 'firebase/firestore';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import { auth,db } from '../../lib/firebase';
+import { auth, db } from '../../lib/firebase';
 import { WorkoutSessionDocument } from '../../lib/types';
 import { addWorkoutSession, getWorkoutSessions } from '../db';
 
@@ -31,7 +31,7 @@ describe('Firestore DB Service', () => {
   it('should add a workout session and then retrieve it', async () => {
     // Arrange
     const newSession: Omit<WorkoutSessionDocument, 'id'> = {
-      userId: testUid,
+      uid: testUid,
       date: new Date(),
       mood: 'happy',
       notes: 'Great session!',
@@ -45,14 +45,14 @@ describe('Firestore DB Service', () => {
     };
 
     // Act: Add the session (must match auth uid to satisfy rules)
-    await addWorkoutSession({ userId: testUid, sessionData: newSession });
+    await addWorkoutSession({ uid: testUid, sessionData: newSession });
 
     // Act: Retrieve sessions for that user
-    const sessions = await getWorkoutSessions({ userId: testUid });
+    const sessions = await getWorkoutSessions({ uid: testUid });
 
     // Assert
     expect(sessions).toHaveLength(1);
-    expect(sessions[0].userId).toBe(testUid);
+    expect(sessions[0].uid).toBe(testUid);
     expect(sessions[0].notes).toBe('Great session!');
     expect(sessions[0].exercises[0].name).toBe('Bench Press');
   });
