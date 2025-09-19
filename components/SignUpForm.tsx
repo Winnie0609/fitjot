@@ -71,7 +71,7 @@ export function SignUpForm({
       });
 
       await addUserToDb({
-        userId: userCredential.user.uid,
+        uid: userCredential.user.uid,
         userData: {
           uid: userCredential.user.uid,
           email: values.email,
