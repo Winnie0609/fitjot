@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Edit, Frown,Meh, Smile, Trash2 } from 'lucide-react';
+import { Edit, Frown, Meh, Smile, Trash2 } from 'lucide-react';
 
 import {
   Card,
@@ -69,7 +69,7 @@ export function SessionList({ sessions, onEdit, onDelete }: SessionListProps) {
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       {session.mood && moodIcons[session.mood]}
-                      {format(session.date, 'M/d/yyyy (E)')}
+                      {format(session.date, 'dd MMM yyyy')}
                     </CardTitle>
                     <CardDescription>
                       {session.exercises.length} exercises

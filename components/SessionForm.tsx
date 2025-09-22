@@ -1,5 +1,6 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import {
   Calendar as CalendarIcon,
@@ -11,6 +12,14 @@ import {
   X,
 } from 'lucide-react';
 import { ElementType, useEffect, useState } from 'react';
+import {
+  type Control,
+  Resolver,
+  useFieldArray,
+  useForm,
+} from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 import {
   AlertDialog,
@@ -23,43 +32,78 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from '@/components/ui/card';
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { Exercise, Session, WorkoutSet } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/AuthContext';
+import { addWorkoutSession, updateWorkoutSession } from '@/lib/db';
+import {
+  type ExerciseDocument,
+  type Session,
+  type WorkoutSessionDocument,
+} from '@/lib/types';
+import { cn, deepClean } from '@/lib/utils';
 
-import { Calendar } from './ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+const setSchema = z.object({
+  id: z.string(),
+  reps: z.preprocess(
+    (val) => (String(val).trim() === '' ? 0 : Number(val)),
+    z.number().min(0).default(0)
+  ),
+  weight: z.preprocess(
+    (val) => (String(val).trim() === '' ? 0 : Number(val)),
+    z.number().min(0).default(0)
+  ),
+});
+
+const exerciseSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, 'Exercise name is required.'),
+  rpe: z
+    .preprocess(
+      (val) => (String(val).trim() === '' ? undefined : Number(val)),
+      z.number().optional()
+    )
+    .optional(),
+  sets: z.array(setSchema).min(1, 'Add at least one set.'),
+});
+
+const sessionSchema = z.object({
+  date: z.date(),
+  mood: z.enum(['happy', 'neutral', 'sad']),
+  notes: z.string().optional(),
+  exercises: z.array(exerciseSchema).min(1, 'Add at least one exercise.'),
+});
+
+type SessionFormData = z.infer<typeof sessionSchema>;
 
 // Helper to create a new workout set
-const createNewSet = (): WorkoutSet => ({
+const createNewSet = () => ({
   id: crypto.randomUUID(),
   reps: 0,
   weight: 0,
 });
 
 // Helper to create a new exercise
-const createNewExercise = (): Exercise => ({
+const createNewExercise = () => ({
   id: crypto.randomUUID(),
   name: '',
   sets: [createNewSet()],
 });
-
-// Initial state for a new session
-const initialSessionState: Session = {
-  id: crypto.randomUUID(),
-  date: new Date(),
-  exercises: [createNewExercise()],
-  mood: 'happy',
-  notes: '',
-};
 
 const moods: { name: NonNullable<Session['mood']>; icon: ElementType }[] = [
   { name: 'happy', icon: Smile },
@@ -68,397 +112,255 @@ const moods: { name: NonNullable<Session['mood']>; icon: ElementType }[] = [
 ];
 
 interface SessionFormProps {
-  onSave: (session: Session) => void;
+  onSaved: (session: Session) => void;
+  onClose: () => void;
   initialData?: Session | null;
 }
 
-export function SessionForm({ onSave, initialData }: SessionFormProps) {
-  const [session, setSession] = useState<Session>(
-    initialData || initialSessionState
-  );
-  const [exerciseToDelete, setExerciseToDelete] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+export function SessionForm({
+  onSaved,
+  onClose,
+  initialData,
+}: SessionFormProps) {
+  const [exerciseToDelete, setExerciseToDelete] = useState<number | null>(null);
+  const { user } = useAuth();
 
+  const form = useForm<SessionFormData>({
+    resolver: zodResolver(sessionSchema) as Resolver<SessionFormData>,
+    defaultValues:
+      initialData ||
+      (() => ({
+        date: new Date(),
+        exercises: [createNewExercise()],
+        mood: 'happy',
+        notes: '',
+        rpe: 0,
+      }))(),
+  });
+
+  const {
+    fields: exerciseFields,
+    append: appendExercise,
+    remove: removeExercise,
+  } = useFieldArray({
+    control: form.control,
+    name: 'exercises',
+  });
+
+  // Reset form when initialData changes
   useEffect(() => {
-    const initialState = initialData || initialSessionState;
-    setSession(initialState);
-    setErrors({}); // Reset errors when data changes
-  }, [initialData]);
-
-  // --- HANDLER FUNCTIONS ---
-
-  const handleDateSelect = (selectedDate: Date | undefined) => {
-    if (selectedDate) {
-      setSession((prev) => {
-        const newDate = new Date(selectedDate);
-        const existingTime = new Date(prev.date);
-        // Preserve time from the old date
-        newDate.setHours(existingTime.getHours(), existingTime.getMinutes());
-        return { ...prev, date: newDate };
-      });
+    if (initialData) {
+      form.reset(initialData);
     }
-  };
+  }, [initialData, form]);
 
-  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const timeValue = e.target.value; // e.g., "14:30"
-    if (!timeValue) return;
-
-    setSession((prev) => {
-      const newDate = new Date(prev.date);
-      const [hours, minutes] = timeValue.split(':').map(Number);
-      newDate.setHours(hours, minutes);
-      return { ...prev, date: newDate };
-    });
-  };
-
-  const handleMoodChange = (mood: NonNullable<Session['mood']>) => {
-    setSession((prev) => ({ ...prev, mood }));
-  };
-
-  const handleExerciseChange = (
-    exId: string,
-    field: 'name' | 'rpe',
-    value: string | number
-  ) => {
-    // Clear error for this field on change
-    if (field === 'name' && errors[exId]) {
-      setErrors((prev) => ({ ...prev, [exId]: undefined }));
+  const onSubmit = async (formData: SessionFormData) => {
+    if (!user) {
+      toast.error('You must be logged in to save a session.');
+      return;
     }
 
-    const processedValue =
-      field === 'rpe' ? Math.max(0, Number(value)) || '' : value;
-
-    setSession((prev) => ({
-      ...prev,
-      exercises: prev.exercises.map((ex) =>
-        ex.id === exId ? { ...ex, [field]: processedValue } : ex
-      ),
-    }));
-  };
-
-  const handleSetChange = (
-    exId: string,
-    setId: string,
-    field: 'reps' | 'weight',
-    value: number
-  ) => {
-    const processedValue = Math.max(0, value || 0);
-    setSession((prev) => ({
-      ...prev,
-      exercises: prev.exercises.map((ex) =>
-        ex.id === exId
-          ? {
-              ...ex,
-              sets: ex.sets.map((set) =>
-                set.id === setId ? { ...set, [field]: processedValue } : set
-              ),
-            }
-          : ex
-      ),
-    }));
-  };
-
-  const addExercise = () => {
-    setSession((prev) => ({
-      ...prev,
-      exercises: [...prev.exercises, createNewExercise()],
-    }));
-  };
-
-  const handleRemoveExerciseRequest = (exId: string) => {
-    setExerciseToDelete(exId);
-  };
-
-  const performRemoveExercise = () => {
-    if (!exerciseToDelete) return;
-    setSession((prev) => ({
-      ...prev,
-      exercises: prev.exercises.filter((ex) => ex.id !== exerciseToDelete),
-    }));
-    setExerciseToDelete(null);
-  };
-
-  const addSet = (exId: string) => {
-    setSession((prev) => ({
-      ...prev,
-      exercises: prev.exercises.map((ex) => {
-        if (ex.id === exId) {
-          const lastSet =
-            ex.sets.length > 0 ? ex.sets[ex.sets.length - 1] : null;
-          const newSet = {
-            id: crypto.randomUUID(),
-            reps: lastSet?.reps || 0,
-            weight: lastSet?.weight || 0,
-          };
-          return { ...ex, sets: [...ex.sets, newSet] };
+    // Build Firestore document, stripping undefineds
+    const sessionDocument: Omit<WorkoutSessionDocument, 'id'> = {
+      uid: user.uid,
+      date: formData.date,
+      exercises: formData.exercises.map((ex): ExerciseDocument => {
+        const exerciseData: ExerciseDocument = {
+          id: ex.id,
+          name: ex.name,
+          sets: ex.sets,
+        };
+        if (ex.rpe !== undefined) {
+          exerciseData.rpe = ex.rpe;
         }
-        return ex;
+        return exerciseData;
       }),
-    }));
-  };
+    };
+    if (formData.mood) sessionDocument.mood = formData.mood;
+    if (formData.notes) sessionDocument.notes = formData.notes;
 
-  const removeSet = (exId: string, setId: string) => {
-    setSession((prev) => ({
-      ...prev,
-      exercises: prev.exercises.map((ex) =>
-        ex.id === exId
-          ? { ...ex, sets: ex.sets.filter((set) => set.id !== setId) }
-          : ex
-      ),
-    }));
-  };
+    try {
+      if (initialData?.id) {
+        await updateWorkoutSession({
+          sessionId: initialData.id,
+          uid: user.uid,
+          sessionData: sessionDocument as WorkoutSessionDocument,
+        });
 
-  const handleSubmit = () => {
-    const newErrors: Record<string, string | undefined> = {};
-    session.exercises.forEach((ex) => {
-      if (!ex.name.trim()) {
-        newErrors[ex.id] = 'Exercise name is required.';
+        onSaved(deepClean({ ...formData, id: initialData.id }));
+        toast.success(
+          `Session for ${format(
+            formData.date,
+            'dd MMM yyyy'
+          )} has been updated.`
+        );
+      } else {
+        const newDocRef = await addWorkoutSession({
+          uid: user.uid,
+          sessionData: sessionDocument as WorkoutSessionDocument,
+        });
+        onSaved(deepClean({ ...formData, id: newDocRef.id }));
+        toast.success(
+          `Session for ${format(formData.date, 'dd MMM yyyy')} has been saved.`
+        );
       }
-    });
-
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length > 0) {
-      return; // Block submission
-    }
-
-    onSave(session);
-    // Only reset the form if we are NOT in edit mode
-    if (!initialData) {
-      setSession(initialSessionState);
+      onClose();
+    } catch (error) {
+      console.error('Failed to save workout session:', error);
+      toast.error('Failed to save record. Please try again.');
     }
   };
+
+  const { isSubmitting } = form.formState;
 
   return (
-    <Card className="w-full max-w-2xl mx-auto border-none shadow-none pt-0">
-      <CardHeader className="px-1 pt-0">
-        {/* Title is now handled by the Dialog in the parent component */}
-      </CardHeader>
-      <CardContent className="space-y-6 px-1 pb-0">
-        {/* Date and Mood Section */}
-        <div className="flex gap-4 align-start flex-wrap">
-          <div className="space-y-2">
-            <Label>Date & Time</Label>
-            <div className="flex gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={'outline'}
-                    className={cn(
-                      'w-[150px] justify-start text-left font-normal',
-                      !session.date && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {session.date ? (
-                      format(session.date, 'P')
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={session.date}
-                    onSelect={handleDateSelect}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <Input
-                type="time"
-                className="w-[110px] [&::-webkit-calendar-picker-indicator]:ml-2 pl-2"
-                value={format(session.date, 'HH:mm')}
-                onChange={handleTimeChange}
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="mood">Mood</Label>
-            <div className="flex gap-2">
-              {moods.map(({ name, icon: Icon }) => (
-                <Button
-                  key={name}
-                  variant={session.mood === name ? 'default' : 'outline'}
-                  size="icon"
-                  onClick={() => handleMoodChange(name)}
-                >
-                  <Icon className="h-5 w-5" />
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Exercises Section */}
-        <div className="space-y-4">
-          <Label>Exercises</Label>
-          {session.exercises.map((exercise) => (
-            <div
-              key={exercise.id}
-              className="border bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-lg space-y-4"
-            >
-              <div className="flex items-end gap-2">
-                <div className="flex-1 space-y-1">
-                  <Label
-                    htmlFor={`exercise-name-${exercise.id}`}
-                    className="text-xs text-muted-foreground"
-                  >
-                    Exercise Name
-                  </Label>
-                  <Input
-                    id={`exercise-name-${exercise.id}`}
-                    placeholder="e.g., Bench Press"
-                    value={exercise.name}
-                    onChange={(e) =>
-                      handleExerciseChange(exercise.id, 'name', e.target.value)
-                    }
-                    className={cn(errors[exercise.id] && 'border-destructive')}
-                  />
-                  {errors[exercise.id] && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors[exercise.id]}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <Label
-                    htmlFor={`rpe-${exercise.id}`}
-                    className="text-xs text-muted-foreground"
-                  >
-                    RPE
-                  </Label>
-                  <Input
-                    id={`rpe-${exercise.id}`}
-                    type="number"
-                    placeholder="8"
-                    className="w-16"
-                    value={exercise.rpe}
-                    min={0}
-                    onChange={(e) =>
-                      handleExerciseChange(
-                        exercise.id,
-                        'rpe',
-                        parseInt(e.target.value, 10)
-                      )
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Sets */}
-              <div className="space-y-2">
-                <div className="flex items-end gap-2">
-                  <div className="w-8 space-y-1">
-                    <Label className="text-xs text-muted-foreground">Set</Label>
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Date and Mood Section */}
+          <div className="flex flex-wrap gap-4">
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date & Time</FormLabel>
+                  <div className="flex gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={'outline'}
+                            className={cn(
+                              'w-[150px] justify-start text-left font-normal',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? (
+                              format(field.value, 'dd MMM yyyy')
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Input
+                      type="time"
+                      className="w-[110px]"
+                      value={format(field.value, 'HH:mm:ss')}
+                      onChange={(e) => {
+                        const newDate = new Date(field.value);
+                        const [hours, minutes] = e.target.value
+                          .split(':')
+                          .map(Number);
+                        newDate.setHours(hours, minutes);
+                        field.onChange(newDate);
+                      }}
+                    />
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <Label className="text-xs text-muted-foreground">
-                      Reps
-                    </Label>
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <Label className="text-xs text-muted-foreground">
-                      Weight (kg)
-                    </Label>
-                  </div>
-                  <div className="w-10"></div>
-                </div>
-                {exercise.sets.map((set, setIndex) => (
-                  <div key={set.id} className="flex items-center gap-2">
-                    <div className="w-8 text-sm font-medium text-muted-foreground text-center">
-                      {setIndex + 1}
-                    </div>
-                    <div className="flex-1">
-                      <Input
-                        type="number"
-                        placeholder="12"
-                        value={set.reps}
-                        min={0}
-                        onChange={(e) =>
-                          handleSetChange(
-                            exercise.id,
-                            set.id,
-                            'reps',
-                            parseInt(e.target.value, 10)
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <Input
-                        type="number"
-                        placeholder="50"
-                        value={set.weight}
-                        min={0}
-                        onChange={(e) =>
-                          handleSetChange(
-                            exercise.id,
-                            set.id,
-                            'weight',
-                            parseInt(e.target.value, 10)
-                          )
-                        }
-                      />
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeSet(exercise.id, set.id)}
-                    >
-                      <X className="h-4 w-4 text-red-500" />
-                      <span className="sr-only">Delete Set</span>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full"
-                onClick={() => addSet(exercise.id)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Set
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full"
-                onClick={() => handleRemoveExerciseRequest(exercise.id)}
-              >
-                <Trash2 className="h-4 w-4 mr-2 text-red-500" />
-                <div className="text-red-500">Remove Exercise</div>
-              </Button>
-            </div>
-          ))}
-          <Button variant="secondary" className="w-full" onClick={addExercise}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Exercise
-          </Button>
-        </div>
-
-        {/* Notes Section */}
-        <div className="space-y-2">
-          <>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              placeholder="Any thoughts on today's session? e.g., form tips, PRs, etc."
-              value={session.notes || ''}
-              onChange={(e) =>
-                setSession((prev) => ({ ...prev, notes: e.target.value }))
-              }
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-end px-1 pt-6">
-        <Button onClick={handleSubmit}>Save</Button>
-      </CardFooter>
+            <FormField
+              control={form.control}
+              name="mood"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mood</FormLabel>
+                  <FormControl>
+                    <div className="flex gap-2">
+                      {moods.map(({ name, icon: Icon }) => (
+                        <Button
+                          key={name}
+                          variant={field.value === name ? 'default' : 'outline'}
+                          size="icon"
+                          type="button"
+                          onClick={() => field.onChange(name)}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </Button>
+                      ))}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Exercises Section */}
+          <div className="space-y-4">
+            <FormLabel>Exercises</FormLabel>
+            {exerciseFields.map((exercise, exIndex) => (
+              <ExerciseField
+                key={exercise.id}
+                exIndex={exIndex}
+                control={form.control}
+                onRemoveRequest={() => setExerciseToDelete(exIndex)}
+              />
+            ))}
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full"
+              onClick={() => appendExercise(createNewExercise())}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Exercise
+            </Button>
+            <FormMessage>
+              {form.formState.errors.exercises?.root?.message}
+            </FormMessage>
+          </div>
+
+          {/* Notes Section */}
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Any thoughts on today's session? e.g., form tips, PRs, etc."
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* TODO: advanced options: unit selection and lesson type(with coach option) */}
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-2 pt-6">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save Session'}
+            </Button>
+          </div>
+        </form>
+      </Form>
+
       <AlertDialog
-        open={!!exerciseToDelete}
+        open={exerciseToDelete !== null}
         onOpenChange={(open) => !open && setExerciseToDelete(null)}
       >
         <AlertDialogContent>
@@ -473,12 +375,156 @@ export function SessionForm({ onSave, initialData }: SessionFormProps) {
             <AlertDialogCancel onClick={() => setExerciseToDelete(null)}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={performRemoveExercise}>
+            <AlertDialogAction
+              onClick={() => {
+                if (exerciseToDelete !== null) {
+                  removeExercise(exerciseToDelete);
+                  setExerciseToDelete(null);
+                }
+              }}
+            >
               Continue
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+    </>
+  );
+}
+
+// Sub-component for a single Exercise
+function ExerciseField({
+  exIndex,
+  control,
+  onRemoveRequest,
+}: {
+  exIndex: number;
+  control: Control<SessionFormData>;
+  onRemoveRequest: () => void;
+}) {
+  const {
+    fields: setFields,
+    append: appendSet,
+    remove: removeSet,
+  } = useFieldArray({
+    control,
+    name: `exercises.${exIndex}.sets`,
+  });
+
+  return (
+    <div className="border bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-lg space-y-4">
+      <div className="flex items-end gap-2">
+        <FormField
+          control={control}
+          name={`exercises.${exIndex}.name`}
+          render={({ field }) => (
+            <FormItem data-testid="exercise-name-input" className="flex-1">
+              <FormLabel className="text-xs text-muted-foreground">
+                Exercise Name
+              </FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., Bench Press" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name={`exercises.${exIndex}.rpe`}
+          render={({ field }) => (
+            <FormItem data-testid="rpe-input">
+              <FormLabel className="text-xs text-muted-foreground">
+                RPE
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="8"
+                  className="w-16"
+                  {...field}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {/* Sets */}
+      <div className="space-y-2">
+        <div className="flex items-end gap-2">
+          <div className="w-8">
+            <Label className="text-xs text-muted-foreground">Set</Label>
+          </div>
+          <div className="flex-1">
+            <Label className="text-xs text-muted-foreground">Reps</Label>
+          </div>
+          <div className="flex-1">
+            <Label className="text-xs text-muted-foreground">Weight (kg)</Label>
+          </div>
+          <div className="w-10" />
+        </div>
+        {setFields.map((set, setIndex) => (
+          <div key={set.id} className="flex items-center gap-2">
+            <div className="w-8 text-sm font-medium text-muted-foreground text-center">
+              {setIndex + 1}
+            </div>
+            <FormField
+              control={control}
+              name={`exercises.${exIndex}.sets.${setIndex}.reps`}
+              render={({ field }) => (
+                <FormItem data-testid="reps-input" className="flex-1">
+                  <FormControl>
+                    <Input type="number" placeholder="12" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name={`exercises.${exIndex}.sets.${setIndex}.weight`}
+              render={({ field }) => (
+                <FormItem data-testid="weight-input" className="flex-1">
+                  <FormControl>
+                    <Input type="number" placeholder="50" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => removeSet(setIndex)}
+              data-testid="delete-set-button"
+            >
+              <X className="h-4 w-4 text-red-500" />
+              <span className="sr-only">Delete Set</span>
+            </Button>
+          </div>
+        ))}
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="w-full"
+        onClick={() => appendSet(createNewSet())}
+        data-testid="add-set-button"
+      >
+        <Plus className="h-4 w-4 mr-2" /> Add Set
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="w-full text-red-500 hover:text-red-500"
+        onClick={onRemoveRequest}
+        data-testid="remove-exercise-button"
+      >
+        <Trash2 className="h-4 w-4 mr-2" />
+        Remove Exercise
+      </Button>
+    </div>
   );
 }
