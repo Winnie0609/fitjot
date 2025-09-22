@@ -29,5 +29,10 @@ service cloud.firestore {
         && request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if isSignedIn() && existingOwnerId() == authUid();
     }
+
+    // Allow anyone to read the global exercises list, as it's not user-specific data.
+    match /exercises/{exerciseId} {
+      allow read: if true;
+    }
   }
 }
