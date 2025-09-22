@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { Sidebar } from '@/components/Sidebar';
 import { useAuth } from '@/lib/AuthContext';
-import { SidebarProvider, useSidebar } from '@/lib/SidebarContext';
+import { SidebarProvider } from '@/lib/SidebarContext';
 import { cn } from '@/lib/utils';
 
 interface AppLayoutProps {
@@ -62,14 +62,13 @@ function AppLayoutInner({
           'ml-0',
           // Desktop: margin based on sidebar state
           'md:px-8',
-          // isCollapsed && 'md:ml-16',
           // Unified padding for all dashboard pages
           'p-6',
           className
         )}
       >
         <div className="md:hidden h-4" /> {/* Spacer for mobile menu button */}
-        <div className="max-w-7xl mx-auto space-y-8">{children}</div>
+        <div className="max-w-6xl mx-auto space-y-8 px-6 py-4">{children}</div>
       </main>
     </div>
   );

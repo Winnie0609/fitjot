@@ -106,15 +106,20 @@ export function Sidebar({ className }: SidebarProps) {
         )}
       >
         {/* Header */}
-        <div className="flex h-12 items-center justify-between px-4 mt-8">
-          <div className="flex items-center gap-2 p-2">
-            <Activity className="h-5 w-5 text-primary" />
+        <div
+          className="flex h-12 items-center px-6 mt-8"
+          onClick={() => router.push('/')}
+        >
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <Activity className="text-primary" />
             {(!isCollapsed || isMobileMenuOpen) && (
-              <span className="font-semibold text-lg">Workout Log</span>
+              <span className="font-semibold text-lg whitespace-nowrap overflow-hidden">
+                Workout Log
+              </span>
             )}
           </div>
 
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center items-center flex-shrink-0">
             <Button
               variant="ghost"
               className={cn(
@@ -130,7 +135,7 @@ export function Sidebar({ className }: SidebarProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="ml-auto h-8 w-8 md:hidden"
+            className="h-8 w-8 md:hidden flex-shrink-0"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <X className="h-4 w-4" />
@@ -219,7 +224,12 @@ export function Sidebar({ className }: SidebarProps) {
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-56">
+
+            <DropdownMenuContent
+              align="end"
+              side={isCollapsed ? 'left' : 'top'}
+              className="w-56"
+            >
               <DropdownMenuItem onClick={handleSettings}>
                 <Settings className="mr-2 h-4 w-4" />
                 Settings

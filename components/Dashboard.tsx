@@ -1,12 +1,15 @@
 'use client';
 
 import { BarChart3, Dumbbell, Plus, TrendingUp } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/lib/AuthContext';
 import { getInBodyData, getWorkoutSessions } from '@/lib/db';
+
+import { Button } from './ui/button';
+import { WeeklyCalendarExample } from './WeeklyCalendarExample';
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -17,6 +20,7 @@ export function Dashboard() {
     recentInBodyRecords: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     if (!user) return;
@@ -40,7 +44,8 @@ export function Dashboard() {
 
         const recentInBodyRecords = inBodyRecords.filter(
           (record) =>
-            record.reportDate && new Date(record.reportDate as string) > thirtyDaysAgo
+            record.reportDate &&
+            new Date(record.reportDate as string) > thirtyDaysAgo
         );
 
         setStats({
@@ -58,25 +63,6 @@ export function Dashboard() {
 
     loadStats();
   }, [user]);
-
-  const quickActions = [
-    {
-      title: 'New Workout Session',
-      description: 'Log your latest workout session',
-      icon: Dumbbell,
-      href: '/workout',
-      action: 'workout',
-      color: 'bg-blue-500',
-    },
-    {
-      title: 'New InBody Record',
-      description: 'Add your latest body composition data',
-      icon: BarChart3,
-      href: '/inbody',
-      action: 'inbody',
-      color: 'bg-green-500',
-    },
-  ];
 
   const statCards = [
     {
@@ -102,51 +88,36 @@ export function Dashboard() {
     },
   ];
 
-  return (
-    <div className="px-6 py-4 space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Hello, {user?.displayName}!</h1>
-        <p className="text-muted-foreground">
-          Welcome back! Here&apos;s your fitness overview.
-        </p>
-      </div>
+  // stats for specific date
+  // mon(8), tue(9), wed(10), thu(11), fri(12), sat(13), sun(14)
+  // mark: when the user workout on the date, mark the date
+  // summary: menu that user workout on the date
 
-      {/* Quick Actions */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Card
-                key={action.action}
-                className="hover:shadow-md transition-shadow cursor-pointer group"
-              >
-                <Link href={action.href}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-4">
-                      <div
-                        className={`p-3 rounded-lg ${action.color} text-white`}
-                      >
-                        <Icon className="h-6 w-6" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
-                          {action.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {action.description}
-                        </p>
-                      </div>
-                      <Plus className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                  </CardContent>
-                </Link>
-              </Card>
-            );
-          })}
+  // weight tracking chart
+  // inbody chart
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <section className="flex justify-between gap-4 flex-col md:items-center md:flex-row items-start md:gap-0 ">
+        <div>
+          <h1 className="text-xl font-bold">
+            Welcome Back, {user?.displayName}.
+          </h1>
+          <p className="text-muted-foreground">
+            Here&apos;s your fitness overview.
+          </p>
         </div>
+
+        {/* Quick Actions */}
+        <Button onClick={() => router.push('/workout')}>
+          <Plus className="h-4 w-4" /> Add a New Session
+        </Button>
+      </section>
+
+      {/* Weekly Calendar */}
+      <section>
+        <WeeklyCalendarExample />
       </section>
 
       {/* Stats Overview */}
