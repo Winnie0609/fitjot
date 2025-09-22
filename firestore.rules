@@ -1,0 +1,33 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helpers
+    function isSignedIn() { return request.auth != null; }
+    function authUid() { return isSignedIn() ? request.auth.uid : null; }
+    function newOwnerId() { return request.resource.data.uid; }
+    function existingOwnerId() { return resource.data.uid; }
+
+    match /workout_sessions/{sessionId} {
+      allow create: if isSignedIn() && newOwnerId() == authUid();
+      allow read, update, delete: if isSignedIn() && existingOwnerId() == authUid();
+    }
+
+    match /users/{userId} {
+      // The document ID must match the user's auth UID.
+      allow create: if authUid() == userId;
+      allow read, update: if authUid() == userId;
+    }
+
+    match /in_body_data/{recordId} {
+      allow create: if isSignedIn() && newOwnerId() == authUid();
+      allow read: if isSignedIn() && existingOwnerId() == authUid();
+      allow update: if isSignedIn()
+        && existingOwnerId() == authUid()
+        && newOwnerId() == existingOwnerId()
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isSignedIn() && existingOwnerId() == authUid();
+    }
+  }
+}
