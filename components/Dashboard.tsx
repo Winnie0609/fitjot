@@ -9,7 +9,6 @@ import { useAuth } from '@/lib/AuthContext';
 import { getInBodyData, getWorkoutSessions } from '@/lib/db';
 
 import { Button } from './ui/button';
-import { WeeklyCalendarExample } from './WeeklyCalendarExample';
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -116,9 +115,9 @@ export function Dashboard() {
       </section>
 
       {/* Weekly Calendar */}
-      <section>
+      {/* <section>
         <WeeklyCalendarExample />
-      </section>
+      </section> */}
 
       {/* Stats Overview */}
       <section>
