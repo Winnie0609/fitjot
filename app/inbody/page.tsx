@@ -95,7 +95,10 @@ function InBodyPageContent() {
           <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading records...
         </div>
       ) : inBodyRecords.length === 0 ? (
-        <div className="text-sm text-muted-foreground">No records yet.</div>
+        <div className="text-center text-muted-foreground mt-8">
+          <p>No inbody records recorded yet.</p>
+          <p>Click &quot;Add New Record&quot; to get started!</p>
+        </div>
       ) : (
         <div className="space-y-2">
           {inBodyRecords.map((r) => {
