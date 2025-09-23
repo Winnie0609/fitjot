@@ -183,11 +183,6 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (initialData) {
-      form.reset(initialData);
-    }
-  }, [initialData]);
 
   const form = useForm<InBodyFormValues>({
     resolver: zodResolver(inBodyFormSchema) as Resolver<InBodyFormValues>,
@@ -205,7 +200,14 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
     },
   });
 
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    }
+  }, [form, initialData]);
+
   const onSubmit = async (formData: InBodyFormValues) => {
+    
     if (!user) {
       toast.error('You must be logged in to save a record.');
       return;
@@ -294,11 +296,12 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log('Image uploaded:', file);
-      handleSelectedFile(file);
-    }
+    toast.info('Image upload function is coming soon!');
+    // const file = event.target.files?.[0];
+    // if (file) {
+    //   console.log('Image uploaded:', file);
+    //   handleSelectedFile(file);
+    // }
   };
 
   return (
@@ -387,7 +390,10 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
               'bg-muted/40 p-6 rounded-lg mb-8 border border-dashed transition-colors cursor-pointer py-10',
               isDragging ? 'border-primary bg-muted' : 'border-border'
             )}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              toast.info('Image upload function is coming soon!');
+              // fileInputRef.current?.click()
+            }}
             onDragOver={(e) => {
               e.preventDefault();
               setIsDragging(true);
@@ -396,8 +402,9 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
             onDrop={(e) => {
               e.preventDefault();
               setIsDragging(false);
-              const file = e.dataTransfer.files?.[0];
-              if (file) handleSelectedFile(file);
+              toast.info('Image upload function is coming soon!');
+              // const file = e.dataTransfer.files?.[0];
+              // if (file) handleSelectedFile(file);
             }}
           >
             <input

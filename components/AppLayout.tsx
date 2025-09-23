@@ -57,18 +57,18 @@ function AppLayoutInner({
       <Sidebar />
       <main
         className={cn(
-          'flex-1 overflow-y-auto bg-muted/10 transition-all duration-300',
+          'flex-1 overflow-y-auto bg-muted/10 transition-all duration-300 ',
           // Mobile: no margin (sidebar is overlay when open)
           'ml-0',
           // Desktop: margin based on sidebar state
           'md:px-8',
           // Unified padding for all dashboard pages
-          'p-6',
+          'md:p-6 p-2',
           className
         )}
       >
         <div className="md:hidden h-4" /> {/* Spacer for mobile menu button */}
-        <div className="max-w-6xl mx-auto space-y-8 px-6 py-4">{children}</div>
+        <div className="max-w-6xl mx-auto space-y-8 px-6 py-10">{children}</div>
       </main>
     </div>
   );
