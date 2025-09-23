@@ -19,12 +19,20 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/lib/AuthContext';
 import { deleteWorkoutSession, getWorkoutSessions } from '@/lib/db';
-import { type InBodyDataDocument, type Session } from '@/lib/types';
+import {
+  type ExerciseData,
+  type InBodyDataDocument,
+  type Session,
+} from '@/lib/types';
 
 import { InBodyForm } from './InBodyForm';
 import { Button } from './ui/button';
 
-export function WorkoutDashboard() {
+export function WorkoutDashboard({
+  exerciseData,
+}: {
+  exerciseData: ExerciseData[];
+}) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -76,7 +84,7 @@ export function WorkoutDashboard() {
     if (editingSession?.id) {
       setSessions(sessions.map((s) => (s.id === saved.id ? saved : s)));
     } else {
-      setSessions([...sessions, saved]);
+      setSessions([saved, ...sessions]);
     }
     handleFormClose();
   };
@@ -100,7 +108,10 @@ export function WorkoutDashboard() {
       await deleteWorkoutSession({ sessionId: sessionToDelete.id });
       setSessions(sessions.filter((s) => s.id !== sessionToDelete.id));
       toast.error(
-        `Session for ${format(sessionToDelete.date, 'dd MMM yyyy')} has been deleted.`
+        `Session for ${format(
+          sessionToDelete.date,
+          'dd MMM yyyy'
+        )} has been deleted.`
       );
       setSessionToDelete(null); // Close the dialog
     } catch (error) {
@@ -200,6 +211,8 @@ export function WorkoutDashboard() {
               onSaved={handleSessionSaved}
               onClose={handleFormClose}
               initialData={editingSession}
+              exerciseData={exerciseData}
+              isFormOpen={isFormOpen}
             />
           </div>
         </div>
@@ -214,8 +227,10 @@ export function WorkoutDashboard() {
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
               You are about to delete the workout session from{' '}
-              <b>{sessionToDelete && format(sessionToDelete.date, 'dd MMM yyyy')}</b>.
-              This action cannot be undone.
+              <b>
+                {sessionToDelete && format(sessionToDelete.date, 'dd MMM yyyy')}
+              </b>
+              . This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
