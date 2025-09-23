@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { SessionForm } from '@/components/SessionForm';
-import { WorkoutHistoryTable } from '@/components/WorkoutHistoryTable';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { WorkoutHistoryTable } from '@/components/WorkoutHistoryTable';
 import { useAppData } from '@/lib/AppDataContext';
 import { useAuth } from '@/lib/AuthContext';
 import { deleteWorkoutSession } from '@/lib/db';
