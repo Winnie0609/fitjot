@@ -145,7 +145,7 @@ export function Dashboard() {
                             month: 'short',
                             day: 'numeric',
                           })
-                        : 'No workouts yet'}
+                        : '-'}
                     </p>
                     {summary.latestWorkout.mood === 'happy' && (
                       <Smile className="h-4 w-4 text-green-600" />
@@ -194,7 +194,7 @@ export function Dashboard() {
                             month: 'short',
                             day: 'numeric',
                           })
-                        : 'No records yet'}
+                        : '-'}
                     </p>
 
                     {!loading && summary.latestInBody.weight && (
