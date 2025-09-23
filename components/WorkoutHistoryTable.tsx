@@ -14,8 +14,8 @@ import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Session, WorkoutSet } from '@/lib/types';
 import { getWorkoutCategories } from '@/lib/summary';
+import { Session, WorkoutSet } from '@/lib/types';
 
 // Helper function to group sets
 function groupSets(sets: WorkoutSet[]) {
