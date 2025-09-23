@@ -1,5 +1,5 @@
 import { AppLayout } from '@/components/AppLayout';
-import { WorkoutDashboard } from '@/components/WorkoutDashboard';
+import { WorkoutDashboard } from '@/components/WorkoutSession';
 import { getExercises } from '@/lib/db';
 
 export default async function WorkoutPage() {

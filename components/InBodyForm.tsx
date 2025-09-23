@@ -183,12 +183,6 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (initialData) {
-      form.reset(initialData);
-    }
-  }, [initialData]);
-
   const form = useForm<InBodyFormValues>({
     resolver: zodResolver(inBodyFormSchema) as Resolver<InBodyFormValues>,
     defaultValues: {
@@ -204,6 +198,12 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
       },
     },
   });
+
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    }
+  }, [form, initialData]);
 
   const onSubmit = async (formData: InBodyFormValues) => {
     if (!user) {
@@ -262,43 +262,44 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
 
   const { isSubmitting } = form.formState;
 
-  const startAnalysis = () => {
-    setIsAnalyzing(true);
-    setAnalysisProgress(0);
-    toast.message('Starting analysis...');
-    const timer = setInterval(() => {
-      setAnalysisProgress((p) => {
-        const next = Math.min(100, p + Math.floor(10 + Math.random() * 15));
-        if (next >= 100) {
-          clearInterval(timer);
-          setTimeout(() => {
-            setIsAnalyzing(false);
-            toast.success(
-              'Analysis completed! Please check the auto-filled data.'
-            );
-          }, 400);
-        }
-        return next;
-      });
-    }, 400);
-  };
+  // const startAnalysis = () => {
+  //   setIsAnalyzing(true);
+  //   setAnalysisProgress(0);
+  //   toast.message('Starting analysis...');
+  //   const timer = setInterval(() => {
+  //     setAnalysisProgress((p) => {
+  //       const next = Math.min(100, p + Math.floor(10 + Math.random() * 15));
+  //       if (next >= 100) {
+  //         clearInterval(timer);
+  //         setTimeout(() => {
+  //           setIsAnalyzing(false);
+  //           toast.success(
+  //             'Analysis completed! Please check the auto-filled data.'
+  //           );
+  //         }, 400);
+  //       }
+  //       return next;
+  //     });
+  //   }, 400);
+  // };
 
-  const handleSelectedFile = (file: File) => {
-    setUploadedFileName(file.name);
-    setIsImageUploading(true);
-    // Simulate upload success
-    setTimeout(() => {
-      setIsImageUploading(false);
-      startAnalysis();
-    }, 800);
-  };
+  // const handleSelectedFile = (file: File) => {
+  //   setUploadedFileName(file.name);
+  //   setIsImageUploading(true);
+  //   // Simulate upload success
+  //   setTimeout(() => {
+  //     setIsImageUploading(false);
+  //     startAnalysis();
+  //   }, 800);
+  // };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log('Image uploaded:', file);
-      handleSelectedFile(file);
-    }
+    toast.info('Image upload function is coming soon!');
+    // const file = event.target.files?.[0];
+    // if (file) {
+    //   console.log('Image uploaded:', file);
+    //   handleSelectedFile(file);
+    // }
   };
 
   return (
@@ -312,25 +313,16 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex gap-4 ">
                 {/* Weight */}
                 <FormField
                   control={form.control}
                   name="bodyComposition.totalWeight.value"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel>Weight (kg)</FormLabel>
                       <FormControl>
-                        <div className="space-y-2">
-                          {/* <Slider
-                            min={30}
-                            max={200}
-                            step={0.1}
-                            value={[Number(field.value) || 0]}
-                            onValueChange={(v) => field.onChange(v[0])}
-                          /> */}
-                          <Input type="number" step={0.1} {...field} />
-                        </div>
+                        <Input type="number" step={0.1} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -341,25 +333,15 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
                   control={form.control}
                   name="bodyComposition.pbf.value"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel>PBF (%)</FormLabel>
                       <FormControl>
-                        <div className="space-y-2">
-                          {/* <Slider
-                            min={5}
-                            max={50}
-                            step={0.1}
-                            value={[Number(field.value) || 0]}
-                            onValueChange={(v) => field.onChange(v[0])}
-                          /> */}
-                          <Input type="number" step={0.1} {...field} />
-                        </div>
+                        <Input type="number" step={0.1} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {/* InBody Score */}
               </div>
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSubmitting}>
@@ -387,7 +369,10 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
               'bg-muted/40 p-6 rounded-lg mb-8 border border-dashed transition-colors cursor-pointer py-10',
               isDragging ? 'border-primary bg-muted' : 'border-border'
             )}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              toast.info('Image upload function is coming soon!');
+              // fileInputRef.current?.click()
+            }}
             onDragOver={(e) => {
               e.preventDefault();
               setIsDragging(true);
@@ -396,8 +381,9 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
             onDrop={(e) => {
               e.preventDefault();
               setIsDragging(false);
-              const file = e.dataTransfer.files?.[0];
-              if (file) handleSelectedFile(file);
+              toast.info('Image upload function is coming soon!');
+              // const file = e.dataTransfer.files?.[0];
+              // if (file) handleSelectedFile(file);
             }}
           >
             <input
@@ -456,23 +442,23 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <fieldset>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Report Date */}
-                  <FormField
-                    control={form.control}
-                    name="reportDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Date</FormLabel>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Date and Time Section */}
+              <div className="flex flex-wrap gap-4">
+                <FormField
+                  control={form.control}
+                  name="reportDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Date & Time</FormLabel>
+                      <div className="flex gap-2">
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
                                 variant={'outline'}
                                 className={cn(
-                                  'w-full justify-start text-left font-normal',
+                                  'w-[150px] justify-start text-left font-normal',
                                   !field.value && 'text-muted-foreground'
                                 )}
                               >
@@ -493,60 +479,57 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
                             />
                           </PopoverContent>
                         </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* Report Time */}
-                  <FormField
-                    control={form.control}
-                    name="reportTime"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Time</FormLabel>
-                        <FormControl>
-                          <Input type="time" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="overallScore"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>InBody Score</FormLabel>
-                        <FormControl>
-                          <div className="space-y-2">
-                            {/* <Slider
-                              min={50}
-                              max={100}
-                              step={1}
-                              value={[Number(field.value) || 0]}
-                              onValueChange={(v) => field.onChange(v[0])}
-                            /> */}
-                            <Input type="number" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                        <FormField
+                          control={form.control}
+                          name="reportTime"
+                          render={({ field: timeField }) => (
+                            <FormControl>
+                              <Input
+                                type="time"
+                                className="w-[145px]"
+                                {...timeField}
+                              />
+                            </FormControl>
+                          )}
+                        />
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="overallScore"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>InBody Score</FormLabel>
+                      <FormControl>
+                        <Input type="number" className="w-[120px]" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-                <h3 className="text-lg font-semibold mt-10 mb-4 border-b pb-2">
-                  Body Composition
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Body Composition Section */}
+              <div className="space-y-4">
+                <FormLabel>Body Composition</FormLabel>
+                <div className="flex flex-wrap gap-4">
                   <FormField
                     control={form.control}
                     name="bodyComposition.skeletalMuscleMass.value"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>SMM (kg)</FormLabel>
+                      <FormItem className="flex flex-col">
+                        <FormLabel className="text-xs text-muted-foreground">
+                          SMM (kg)
+                        </FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} />
+                          <Input
+                            type="number"
+                            className="w-[120px]"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -556,10 +539,16 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
                     control={form.control}
                     name="bodyComposition.bodyFatMass.value"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Body Fat (kg)</FormLabel>
+                      <FormItem className="flex flex-col">
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Body Fat (kg)
+                        </FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} />
+                          <Input
+                            type="number"
+                            className="w-[120px]"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -569,247 +558,325 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
                     control={form.control}
                     name="bodyComposition.bmi.value"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>BMI</FormLabel>
+                      <FormItem className="flex flex-col">
+                        <FormLabel className="text-xs text-muted-foreground">
+                          BMI
+                        </FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} />
+                          <Input
+                            type="number"
+                            className="w-[120px]"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+              </div>
 
-                <Collapsible
-                  open={isAdvancedOpen}
-                  onOpenChange={setIsAdvancedOpen}
-                  className="mt-8"
-                >
-                  <CollapsibleTrigger asChild>
-                    <Button variant="link" className="p-0">
-                      <ChevronDown
-                        className={cn(
-                          'h-4 w-4 mr-2 transition-transform',
-                          isAdvancedOpen && 'rotate-180'
+              <Collapsible
+                open={isAdvancedOpen}
+                onOpenChange={setIsAdvancedOpen}
+                className="mt-8"
+              >
+                <CollapsibleTrigger asChild>
+                  <Button variant="link" className="p-0">
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 mr-2 transition-transform',
+                        isAdvancedOpen && 'rotate-180'
+                      )}
+                    />
+                    {isAdvancedOpen ? 'Hide' : 'Show'} Advanced Metrics
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-6 space-y-8">
+                  {/* Body Composition Analysis */}
+                  <div className="space-y-4">
+                    <FormLabel>Body Composition Analysis</FormLabel>
+                    <div className="flex flex-wrap gap-4">
+                      <FormField
+                        control={form.control}
+                        name="bodyCompositionAnalysis.totalBodyWater.value"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Total Body Water (L)
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[140px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
                         )}
                       />
-                      {isAdvancedOpen ? 'Hide' : 'Show'} Advanced Metrics
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-6 space-y-8">
-                    {/* Body Composition Analysis */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4 border-b pb-2">
-                        Body Composition Analysis
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="bodyCompositionAnalysis.totalBodyWater.value"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Total Body Water (L)</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="bodyCompositionAnalysis.protein.value"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Protein (kg)</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="bodyCompositionAnalysis.mineral.value"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Mineral (kg)</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                      <FormField
+                        control={form.control}
+                        name="bodyCompositionAnalysis.protein.value"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Protein (kg)
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[120px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bodyCompositionAnalysis.mineral.value"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Mineral (kg)
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[120px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
+                  </div>
 
-                    {/* Segmental Lean Analysis */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4 border-b pb-2">
-                        Segmental Lean Analysis (kg)
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="segmentalLeanAnalysis.rightArm.weight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Right Arm</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="segmentalLeanAnalysis.leftArm.weight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Left Arm</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="segmentalLeanAnalysis.trunk.weight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Trunk</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="segmentalLeanAnalysis.rightLeg.weight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Right Leg</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="segmentalLeanAnalysis.leftLeg.weight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Left Leg</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                  {/* Segmental Lean Analysis */}
+                  <div className="space-y-4">
+                    <FormLabel>Segmental Lean Analysis (kg)</FormLabel>
+                    <div className="flex flex-wrap gap-4">
+                      <FormField
+                        control={form.control}
+                        name="segmentalLeanAnalysis.rightArm.weight"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Right Arm
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="segmentalLeanAnalysis.leftArm.weight"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Left Arm
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="segmentalLeanAnalysis.trunk.weight"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Trunk
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="segmentalLeanAnalysis.rightLeg.weight"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Right Leg
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="segmentalLeanAnalysis.leftLeg.weight"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Left Leg
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
+                  </div>
 
-                    {/* Segmental Fat Analysis */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4 border-b pb-2">
-                        Segmental Fat Analysis (kg)
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="segmentalFatAnalysis.rightArm.weight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Right Arm</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="segmentalFatAnalysis.leftArm.weight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Left Arm</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="segmentalFatAnalysis.trunk.weight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Trunk</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="segmentalFatAnalysis.rightLeg.weight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Right Leg</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="segmentalFatAnalysis.leftLeg.weight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Left Leg</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                  {/* Segmental Fat Analysis */}
+                  <div className="space-y-4">
+                    <FormLabel>Segmental Fat Analysis (kg)</FormLabel>
+                    <div className="flex flex-wrap gap-4">
+                      <FormField
+                        control={form.control}
+                        name="segmentalFatAnalysis.rightArm.weight"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Right Arm
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="segmentalFatAnalysis.leftArm.weight"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Left Arm
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="segmentalFatAnalysis.trunk.weight"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Trunk
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="segmentalFatAnalysis.rightLeg.weight"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Right Leg
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="segmentalFatAnalysis.leftLeg.weight"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Left Leg
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="w-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
 
-                {/* Action Buttons */}
-                <div className="flex justify-end gap-2 pt-6">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={onClose}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? 'Saving...' : 'Save Record'}
-                  </Button>
-                </div>
-              </fieldset>
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-2 pt-6">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : 'Save Record'}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
