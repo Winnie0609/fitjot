@@ -175,7 +175,7 @@ export function SessionForm({
       exercises: formData.exercises.map((ex): ExerciseDocument => {
         const exerciseData: ExerciseDocument = {
           id: crypto.randomUUID(),
-          exerciseId: ex.id,
+          exerciseId: ex.exerciseId,
           name: ex.name || '',
           sets: ex.sets,
         };
