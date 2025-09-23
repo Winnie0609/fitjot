@@ -16,6 +16,7 @@ import {
 
 import { db } from './firebase';
 import {
+  ExerciseData,
   InBodyDataDocument,
   UserProfile,
   WorkoutSessionDocument,
@@ -24,6 +25,7 @@ import {
 const WORKOUT_SESSIONS_COLLECTION = 'workout_sessions';
 const USERS_COLLECTION = 'users';
 const IN_BODY_DATA_COLLECTION = 'in_body_data';
+const EXERCISES_COLLECTION = 'exercises';
 
 /**
  * Function to add a user to the database
@@ -228,12 +230,33 @@ const deleteInBodyData = async ({ recordId }: { recordId: string }) => {
   await deleteDoc(doc(db, IN_BODY_DATA_COLLECTION, recordId));
 };
 
+/*
+ * Functions to handle Exercises in the database
+ * get
+ */
+
+const getExercises = async (): Promise<ExerciseData[]> => {
+  const q = query(collection(db, EXERCISES_COLLECTION));
+  const snap = await getDocs(q);
+
+  const exercises = snap.docs.map(
+    (doc) =>
+      ({
+        id: doc.id,
+        ...doc.data(),
+      } as ExerciseData)
+  );
+
+  return exercises;
+};
+
 export {
   addInBodyData,
   addUserToDb,
   addWorkoutSession,
   deleteInBodyData,
   deleteWorkoutSession,
+  getExercises,
   getInBodyData,
   getUser,
   getWorkoutSessions,
