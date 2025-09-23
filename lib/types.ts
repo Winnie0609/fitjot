@@ -13,6 +13,7 @@ export interface WorkoutSet {
  */
 export interface Exercise {
   id: string;
+  exerciseId: string;
   name: string;
   rpe?: number; // Rate of Perceived Exertion
   sets: WorkoutSet[];
@@ -66,6 +67,7 @@ export interface WorkoutSetDocument {
  */
 export interface ExerciseDocument {
   id: string;
+  exerciseId: string;
   name: string;
   rpe?: number;
   sets: WorkoutSetDocument[];
@@ -209,4 +211,28 @@ export interface InBodyDataDocument {
   };
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+/**
+ * Represents a single exercise from the global 'exercises' collection.
+ */
+export interface ExerciseData {
+  id: string;
+  titleEn: string;
+  titleZh: string;
+  aliases: string[];
+  force: string | null;
+  level: string;
+  mechanic: string | null;
+  bodyPart: string;
+  primaryMuscles: string[];
+  secondaryMuscles: string[];
+  equipment: string | null;
+  instructionsEn: string[];
+  instructionsZh: string[];
+  category: string;
+  thumbnailUrl?: string;
+  isCardio: boolean;
+  type: 'global' | 'custom';
+  createdBy: 'system' | string; // 'system' or a user ID
 }
