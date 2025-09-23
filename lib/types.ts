@@ -67,7 +67,7 @@ export interface WorkoutSetDocument {
  */
 export interface ExerciseDocument {
   id: string;
-  exerciseId: string;
+  exerciseId: string; // This is the ID from the global exercise list
   name: string;
   rpe?: number;
   sets: WorkoutSetDocument[];

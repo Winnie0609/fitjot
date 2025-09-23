@@ -163,8 +163,6 @@ export function SessionForm({
   }, [initialData, form]);
 
   const onSubmit = async (formData: SessionFormData) => {
-    console.log('[sessionForm] onSubmit', formData);
-
     if (!user) {
       toast.error('You must be logged in to save a session.');
       return;

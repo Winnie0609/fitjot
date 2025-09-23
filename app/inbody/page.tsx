@@ -113,7 +113,7 @@ export default function InBodyPage() {
         </div>
       ) : (
         <>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center md:flex-row flex-col gap-4 items-start">
             <div>
               <h1 className="text-3xl font-bold">InBody Records</h1>
               <p className="text-muted-foreground">
