@@ -67,6 +67,7 @@ export interface WorkoutSetDocument {
  */
 export interface ExerciseDocument {
   id: string;
+  exerciseId: string;
   name: string;
   rpe?: number;
   sets: WorkoutSetDocument[];

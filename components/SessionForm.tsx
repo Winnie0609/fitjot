@@ -176,8 +176,8 @@ export function SessionForm({
       date: formData.date,
       exercises: formData.exercises.map((ex): ExerciseDocument => {
         const exerciseData: ExerciseDocument = {
-          id: ex.id,
-          exerciseId: ex.exerciseId,
+          id: crypto.randomUUID(),
+          exerciseId: ex.id,
           name: ex.name || '',
           sets: ex.sets,
         };
