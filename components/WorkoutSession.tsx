@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { SessionForm } from '@/components/SessionForm';
-import { SessionList } from '@/components/SessionList';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,15 +16,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { WorkoutHistoryTable } from '@/components/WorkoutHistoryTable';
+import { useAppData } from '@/lib/AppDataContext';
 import { useAuth } from '@/lib/AuthContext';
-import { deleteWorkoutSession, getWorkoutSessions } from '@/lib/db';
-import {
-  type ExerciseData,
-  type InBodyDataDocument,
-  type Session,
-} from '@/lib/types';
+import { deleteWorkoutSession } from '@/lib/db';
+import { type ExerciseData, type Session } from '@/lib/types';
 
-import { InBodyForm } from './InBodyForm';
 import { Button } from './ui/button';
 
 export function WorkoutDashboard({
@@ -33,59 +29,34 @@ export function WorkoutDashboard({
 }: {
   exerciseData: ExerciseData[];
 }) {
-  const [sessions, setSessions] = useState<Session[]>([]);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isInBodyFormOpen, setIsInBodyFormOpen] = useState(false);
-  const [inBodyData, setInBodyData] = useState<
-    (InBodyDataDocument & { id: string }) | null
-  >(null);
   const { user } = useAuth();
+  const { workoutSessions, loading, refresh } = useAppData();
 
+  // No local copy of sessions; render directly from provider
   useEffect(() => {
     if (!user) return;
-
-    const fetchSessions = async () => {
-      setIsLoading(true);
-      try {
-        const userSessions: Session[] = await getWorkoutSessions({
-          uid: user.uid,
-        });
-        setSessions(userSessions);
-      } catch (error) {
-        console.error('Failed to fetch sessions:', error);
-        toast.error('Could not load sessions. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSessions();
   }, [user]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         handleFormClose();
-        handleInBodyFormClose();
       }
     };
-    if (isFormOpen || isInBodyFormOpen) {
+    if (isFormOpen) {
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isFormOpen, isInBodyFormOpen]);
+  }, [isFormOpen]);
 
-  const handleSessionSaved = (saved: Session) => {
-    if (editingSession?.id) {
-      setSessions(sessions.map((s) => (s.id === saved.id ? saved : s)));
-    } else {
-      setSessions([saved, ...sessions]);
-    }
+  const handleSessionSaved = () => {
+    // After create/update, refresh provider data
+    void refresh();
     handleFormClose();
   };
 
@@ -95,7 +66,9 @@ export function WorkoutDashboard({
   };
 
   const handleDeleteRequest = (sessionId: string) => {
-    const session = sessions.find((s) => s.id === sessionId);
+    const session = (workoutSessions as unknown as Session[]).find(
+      (s: Session) => s.id === sessionId
+    );
     if (session) {
       setSessionToDelete(session);
     }
@@ -106,7 +79,7 @@ export function WorkoutDashboard({
 
     try {
       await deleteWorkoutSession({ sessionId: sessionToDelete.id });
-      setSessions(sessions.filter((s) => s.id !== sessionToDelete.id));
+      await refresh();
       toast.error(
         `Session for ${format(
           sessionToDelete.date,
@@ -130,12 +103,7 @@ export function WorkoutDashboard({
     setEditingSession(null);
   };
 
-  const handleInBodyFormClose = () => {
-    setIsInBodyFormOpen(false);
-    setInBodyData(null);
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="text-center">
@@ -149,7 +117,7 @@ export function WorkoutDashboard({
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center md:flex-row flex-col gap-4 items-start">
           <div>
             <h1 className="text-3xl font-bold">Workout Sessions</h1>
             <p className="text-muted-foreground">
@@ -163,37 +131,12 @@ export function WorkoutDashboard({
           </Button>
         </div>
 
-        <SessionList
-          sessions={sessions}
+        <WorkoutHistoryTable
+          sessions={workoutSessions as unknown as Session[]}
           onEdit={handleEditSession}
           onDelete={handleDeleteRequest}
         />
       </div>
-
-      {isInBodyFormOpen && (
-        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">
-          <div className="container mx-auto max-w-2xl p-4 md:p-8">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">
-                {inBodyData ? 'Edit InBody Data' : 'Create a New InBody Data'}
-              </h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleInBodyFormClose}
-              >
-                <X className="h-5 w-5" />
-                <span className="sr-only">Close</span>
-              </Button>
-            </div>
-            <InBodyForm
-              onSaved={() => {}}
-              onClose={handleInBodyFormClose}
-              initialData={inBodyData}
-            />
-          </div>
-        </div>
-      )}
 
       {isFormOpen && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">

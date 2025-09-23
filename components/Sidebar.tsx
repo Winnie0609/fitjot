@@ -180,7 +180,7 @@ export function Sidebar({ className }: SidebarProps) {
                 <Button
                   variant={isActive ? 'secondary' : 'ghost'}
                   className={cn(
-                    'w-full justify-start mb-2 p-2',
+                    'w-full justify-start mb-1 p-2',
                     isCollapsed &&
                       !isMobileMenuOpen &&
                       'md:justify-center md:px-2 h-8 w-8'

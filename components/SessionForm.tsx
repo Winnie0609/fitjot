@@ -163,8 +163,6 @@ export function SessionForm({
   }, [initialData, form]);
 
   const onSubmit = async (formData: SessionFormData) => {
-    console.log('[sessionForm] onSubmit', formData);
-
     if (!user) {
       toast.error('You must be logged in to save a session.');
       return;
@@ -177,7 +175,7 @@ export function SessionForm({
       exercises: formData.exercises.map((ex): ExerciseDocument => {
         const exerciseData: ExerciseDocument = {
           id: crypto.randomUUID(),
-          exerciseId: ex.id,
+          exerciseId: ex.exerciseId,
           name: ex.name || '',
           sets: ex.sets,
         };
