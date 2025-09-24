@@ -133,9 +133,8 @@ export function LoginForm({
                       <FormControl>
                         <PasswordInput
                           placeholder="••••••••"
-                          {...field}
                           autoComplete="current-password"
-                          type="password"
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />

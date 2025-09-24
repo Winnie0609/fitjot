@@ -85,7 +85,7 @@ export function Dashboard() {
       {/* Header */}
       <section className="flex justify-between gap-4 flex-col md:items-center md:flex-row items-start md:gap-0">
         <div>
-          <h1 className="text-xl font-bold">
+          <h1 className="text-2xl font-bold">
             Welcome Back, {user?.displayName}.
           </h1>
           <p className="text-muted-foreground">
