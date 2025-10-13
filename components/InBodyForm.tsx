@@ -55,130 +55,151 @@ interface InBodyFormProps {
 }
 
 // Zod schema (all fields optional; nested objects partial)
-const inBodyFormSchema = z.object({
-  reportDate: z.date().optional(),
-  reportTime: z
-    .string()
-    .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)')
-    .optional(),
-  overallScore: z
-    .union([
-      z.coerce.number().min(0, 'Score cannot be negative'),
-      z.undefined(),
-    ])
-    .optional(),
+const inBodyFormSchema = z
+  .object({
+    reportDate: z.date().optional(),
+    reportTime: z
+      .string()
+      .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)')
+      .optional(),
+    overallScore: z
+      .union([
+        z.coerce.number().min(0, 'Score cannot be negative'),
+        z.undefined(),
+      ])
+      .optional(),
 
-  // Basic Body Composition
-  bodyComposition: z
-    .object({
-      totalWeight: z
-        .object({ value: z.coerce.number().min(0).optional() })
-        .optional(),
-      skeletalMuscleMass: z
-        .object({ value: z.coerce.number().min(0).optional() })
-        .optional(),
-      bodyFatMass: z
-        .object({ value: z.coerce.number().min(0).optional() })
-        .optional(),
-      bmi: z.object({ value: z.coerce.number().min(0).optional() }).optional(),
-      pbf: z.object({ value: z.coerce.number().min(0).optional() }).optional(),
-    })
-    .partial()
-    .optional(),
+    // Basic Body Composition
+    bodyComposition: z
+      .object({
+        totalWeight: z
+          .object({ value: z.coerce.number().min(0).optional() })
+          .optional(),
+        skeletalMuscleMass: z
+          .object({ value: z.coerce.number().min(0).optional() })
+          .optional(),
+        bodyFatMass: z
+          .object({ value: z.coerce.number().min(0).optional() })
+          .optional(),
+        bmi: z
+          .object({ value: z.coerce.number().min(0).optional() })
+          .optional(),
+        pbf: z
+          .object({ value: z.coerce.number().min(0).optional() })
+          .optional(),
+      })
+      .partial()
+      .optional(),
 
-  // Advanced Fields (partial nested)
-  bodyCompositionAnalysis: z
-    .object({
-      totalBodyWater: z
-        .object({ value: z.coerce.number().optional() })
-        .optional(),
-      protein: z.object({ value: z.coerce.number().optional() }).optional(),
-      mineral: z.object({ value: z.coerce.number().optional() }).optional(),
-    })
-    .partial()
-    .optional(),
+    // Advanced Fields (partial nested)
+    bodyCompositionAnalysis: z
+      .object({
+        totalBodyWater: z
+          .object({ value: z.coerce.number().optional() })
+          .optional(),
+        protein: z.object({ value: z.coerce.number().optional() }).optional(),
+        mineral: z.object({ value: z.coerce.number().optional() }).optional(),
+      })
+      .partial()
+      .optional(),
 
-  segmentalLeanAnalysis: z
-    .object({
-      rightArm: z
-        .object({
-          weight: z.coerce.number().optional(),
-          percentage: z.coerce.number().optional(),
-        })
-        .optional(),
-      leftArm: z
-        .object({
-          weight: z.coerce.number().optional(),
-          percentage: z.coerce.number().optional(),
-        })
-        .optional(),
-      trunk: z
-        .object({
-          weight: z.coerce.number().optional(),
-          percentage: z.coerce.number().optional(),
-        })
-        .optional(),
-      rightLeg: z
-        .object({
-          weight: z.coerce.number().optional(),
-          percentage: z.coerce.number().optional(),
-        })
-        .optional(),
-      leftLeg: z
-        .object({
-          weight: z.coerce.number().optional(),
-          percentage: z.coerce.number().optional(),
-        })
-        .optional(),
-    })
-    .partial()
-    .optional(),
+    segmentalLeanAnalysis: z
+      .object({
+        rightArm: z
+          .object({
+            weight: z.coerce.number().optional(),
+            percentage: z.coerce.number().optional(),
+          })
+          .optional(),
+        leftArm: z
+          .object({
+            weight: z.coerce.number().optional(),
+            percentage: z.coerce.number().optional(),
+          })
+          .optional(),
+        trunk: z
+          .object({
+            weight: z.coerce.number().optional(),
+            percentage: z.coerce.number().optional(),
+          })
+          .optional(),
+        rightLeg: z
+          .object({
+            weight: z.coerce.number().optional(),
+            percentage: z.coerce.number().optional(),
+          })
+          .optional(),
+        leftLeg: z
+          .object({
+            weight: z.coerce.number().optional(),
+            percentage: z.coerce.number().optional(),
+          })
+          .optional(),
+      })
+      .partial()
+      .optional(),
 
-  segmentalFatAnalysis: z
-    .object({
-      rightArm: z
-        .object({
-          weight: z.coerce.number().optional(),
-          percentage: z.coerce.number().optional(),
-        })
-        .optional(),
-      leftArm: z
-        .object({
-          weight: z.coerce.number().optional(),
-          percentage: z.coerce.number().optional(),
-        })
-        .optional(),
-      trunk: z
-        .object({
-          weight: z.coerce.number().optional(),
-          percentage: z.coerce.number().optional(),
-        })
-        .optional(),
-      rightLeg: z
-        .object({
-          weight: z.coerce.number().optional(),
-          percentage: z.coerce.number().optional(),
-        })
-        .optional(),
-      leftLeg: z
-        .object({
-          weight: z.coerce.number().optional(),
-          percentage: z.coerce.number().optional(),
-        })
-        .optional(),
-    })
-    .partial()
-    .optional(),
-});
+    segmentalFatAnalysis: z
+      .object({
+        rightArm: z
+          .object({
+            weight: z.coerce.number().optional(),
+            percentage: z.coerce.number().optional(),
+          })
+          .optional(),
+        leftArm: z
+          .object({
+            weight: z.coerce.number().optional(),
+            percentage: z.coerce.number().optional(),
+          })
+          .optional(),
+        trunk: z
+          .object({
+            weight: z.coerce.number().optional(),
+            percentage: z.coerce.number().optional(),
+          })
+          .optional(),
+        rightLeg: z
+          .object({
+            weight: z.coerce.number().optional(),
+            percentage: z.coerce.number().optional(),
+          })
+          .optional(),
+        leftLeg: z
+          .object({
+            weight: z.coerce.number().optional(),
+            percentage: z.coerce.number().optional(),
+          })
+          .optional(),
+      })
+      .partial()
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      const w = data.bodyComposition?.totalWeight?.value;
+      const p = data.bodyComposition?.pbf?.value;
+      return w != null || p != null;
+    },
+    {
+      message: 'Either Weight or PBF is required.',
+      path: ['bodyComposition'],
+    }
+  );
 
 type InBodyFormValues = z.infer<typeof inBodyFormSchema>;
 
 export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [analysisProgress, setAnalysisProgress] = useState(0);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { user } = useAuth();
@@ -233,7 +254,7 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
           `InBody record for ${format(
             formData.reportDate || new Date(),
             'P'
-          )} updated successfully!`
+          )} has been updated.`
         );
       } else {
         // Create new record
@@ -250,7 +271,7 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
           `InBody record for ${format(
             formData.reportDate || new Date(),
             'P'
-          )} saved successfully!`
+          )} has been saved.`
         );
       }
       onClose();
@@ -293,6 +314,7 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
   //   }, 800);
   // };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     toast.info('Image upload function is coming soon!');
     // const file = event.target.files?.[0];
@@ -313,35 +335,43 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="flex gap-4 ">
-                {/* Weight */}
-                <FormField
-                  control={form.control}
-                  name="bodyComposition.totalWeight.value"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Weight (kg)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step={0.1} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {/* PBF */}
-                <FormField
-                  control={form.control}
-                  name="bodyComposition.pbf.value"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>PBF (%)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step={0.1} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="space-y-2">
+                <div className="flex gap-4 ">
+                  {/* Weight */}
+                  <FormField
+                    control={form.control}
+                    name="bodyComposition.totalWeight.value"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Weight (kg)</FormLabel>
+                        <FormControl>
+                          <Input type="number" step={0.1} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {/* PBF */}
+                  <FormField
+                    control={form.control}
+                    name="bodyComposition.pbf.value"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>PBF (%)</FormLabel>
+                        <FormControl>
+                          <Input type="number" step={0.1} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                {/* Cross-field validation message for Weight or PBF requirement */}
+                {form.formState.errors.bodyComposition?.message && (
+                  <p className="text-sm text-destructive">
+                    {String(form.formState.errors.bodyComposition.message)}
+                  </p>
+                )}
               </div>
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSubmitting}>

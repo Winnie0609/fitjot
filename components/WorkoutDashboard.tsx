@@ -1,11 +1,30 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { SessionForm } from '@/components/SessionForm';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Lazy load SessionForm - only load when modal opens
+const SessionForm = dynamic(
+  () =>
+    import('@/components/SessionForm').then((mod) => ({
+      default: mod.SessionForm,
+    })),
+  {
+    loading: () => (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    ),
+    ssr: false, // Form doesn't need SSR
+  }
+);
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,9 +73,9 @@ export function WorkoutDashboard({
     };
   }, [isFormOpen]);
 
-  const handleSessionSaved = () => {
+  const handleSessionSaved = async () => {
     // After create/update, refresh provider data
-    void refresh();
+    await refresh(); // Wait for data to refresh before closing form
     handleFormClose();
   };
 
@@ -105,10 +124,52 @@ export function WorkoutDashboard({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Loading sessions...</p>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center md:flex-row flex-col gap-4 items-start">
+          <div>
+            <h1 className="text-3xl font-bold">Workout Sessions</h1>
+            <p className="text-muted-foreground">
+              Track and manage your workout sessions
+            </p>
+          </div>
+
+          <Button onClick={handleAddNew} size="lg">
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Session
+          </Button>
+        </div>
+
+        <div data-testid="skeleton-loader" className="overflow-hidden">
+          {/* Desktop Table Skeleton */}
+          <div className="hidden md:block">
+            <div className="border rounded-lg">
+              {/* Table Header */}
+              <div className="grid grid-cols-12 gap-4 p-4 px-8 bg-muted/30 border-b text-sm font-medium text-muted-foreground">
+                <div className="col-span-1"></div>
+                <div className="col-span-3">Date</div>
+                <div className="col-span-3">Categories</div>
+                <div className="col-span-3">Exercises</div>
+                <div className="col-span-2"></div>
+              </div>
+              {/* Table Rows Skeleton */}
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="border-b last:border-b-0">
+                  <div className="p-4 px-8">
+                    <Skeleton className="h-5 w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile List Skeleton */}
+          <div className="md:hidden space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="border rounded-lg p-4">
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -127,7 +188,7 @@ export function WorkoutDashboard({
 
           <Button onClick={handleAddNew} size="lg">
             <Plus className="h-4 w-4 mr-2" />
-            Add New Record
+            Add New Session
           </Button>
         </div>
 
@@ -167,7 +228,7 @@ export function WorkoutDashboard({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               You are about to delete the workout session from{' '}
               <b>
