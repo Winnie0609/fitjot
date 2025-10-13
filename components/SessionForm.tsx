@@ -424,7 +424,10 @@ function ExerciseField({
   });
 
   return (
-    <div className="border bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-lg space-y-4">
+    <div
+      className="border bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-lg space-y-4"
+      data-testid={`exercise-${exIndex}`}
+    >
       {/* Exercise Name */}
       <div className="flex items-end gap-2">
         <FormField
@@ -492,9 +495,14 @@ function ExerciseField({
               control={control}
               name={`exercises.${exIndex}.sets.${setIndex}.reps`}
               render={({ field }) => (
-                <FormItem data-testid="reps-input" className="flex-1">
+                <FormItem className="flex-1">
                   <FormControl>
-                    <Input type="number" placeholder="12" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="12"
+                      data-testid="reps-input"
+                      {...field}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -503,9 +511,14 @@ function ExerciseField({
               control={control}
               name={`exercises.${exIndex}.sets.${setIndex}.weight`}
               render={({ field }) => (
-                <FormItem data-testid="weight-input" className="flex-1">
+                <FormItem className="flex-1">
                   <FormControl>
-                    <Input type="number" placeholder="50" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="50"
+                      data-testid="weight-input"
+                      {...field}
+                    />
                   </FormControl>
                 </FormItem>
               )}

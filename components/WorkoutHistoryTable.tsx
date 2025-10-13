@@ -92,7 +92,11 @@ export function WorkoutHistoryTable({
             const isExpanded = expandedRows.has(session.id);
 
             return (
-              <div key={session.id} className="border-b last:border-b-0">
+              <div
+                data-testid="workout-session-row"
+                key={session.id}
+                className="border-b last:border-b-0"
+              >
                 {/* Main Row */}
                 <div
                   className="grid grid-cols-12 gap-4 p-4 px-8 hover:bg-muted/20 transition-colors items-center cursor-pointer"
@@ -135,6 +139,10 @@ export function WorkoutHistoryTable({
                       variant="ghost"
                       size="sm"
                       onClick={() => onEdit(session)}
+                      aria-label={`Edit session on ${format(
+                        session.date,
+                        'dd MMM yyyy'
+                      )}`}
                     >
                       <Edit className="h-3 w-3" />
                     </Button>
@@ -142,6 +150,10 @@ export function WorkoutHistoryTable({
                       variant="ghost"
                       size="sm"
                       onClick={() => onDelete(session.id)}
+                      aria-label={`Delete session on ${format(
+                        session.date,
+                        'dd MMM yyyy'
+                      )}`}
                     >
                       <Trash2 className="h-3 w-3 text-destructive" />
                     </Button>

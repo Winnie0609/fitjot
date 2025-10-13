@@ -56,6 +56,7 @@ export function ExerciseSelect({
             'w-full justify-between',
             !field.value && 'text-muted-foreground'
           )}
+          data-testid="exercise-select"
           ref={field.ref}
           onBlur={field.onBlur}
         >
