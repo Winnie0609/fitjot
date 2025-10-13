@@ -134,7 +134,7 @@ export function Dashboard() {
                   <div className="text-sm font-medium text-muted-foreground uppercase">
                     Latest Workout
                   </div>
-                  <div className="flex items-center gap-2 flex-col md:flex-row">
+                  <div className="flex items-start gap-2 flex-col md:flex-row">
                     <p className="text-lg font-semibold">
                       {loading
                         ? '-'
@@ -163,7 +163,7 @@ export function Dashboard() {
                     <div className="text-xs text-muted-foreground">
                       {filteredWorkoutSessions[0]?.exercises
                         ?.slice(0, 2)
-                        .map((ex, _) => ex.name)
+                        .map((ex) => ex.name)
                         .join(', ')}
                       {(filteredWorkoutSessions[0]?.exercises?.length || 0) >
                         2 && ' +more'}
