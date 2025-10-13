@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Plus, X } from 'lucide-react';
+import { Loader2, Plus, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -51,6 +51,7 @@ export function WorkoutDashboard({
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { user } = useAuth();
   const { workoutSessions, loading, refresh } = useAppData();
 
@@ -75,7 +76,7 @@ export function WorkoutDashboard({
 
   const handleSessionSaved = async () => {
     // After create/update, refresh provider data
-    await refresh(); // Wait for data to refresh before closing form
+    await refresh();
     handleFormClose();
   };
 
@@ -95,6 +96,7 @@ export function WorkoutDashboard({
 
   const performDelete = async () => {
     if (!sessionToDelete || !sessionToDelete.id) return;
+    setIsDeleting(true);
 
     try {
       await deleteWorkoutSession({ sessionId: sessionToDelete.id });
@@ -109,6 +111,8 @@ export function WorkoutDashboard({
     } catch (error) {
       console.error('Failed to delete session:', error);
       toast.error('Failed to delete session. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -238,11 +242,21 @@ export function WorkoutDashboard({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSessionToDelete(null)}>
+            <AlertDialogCancel
+              onClick={() => setSessionToDelete(null)}
+              disabled={isDeleting}
+            >
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={performDelete}>
-              Continue
+            <AlertDialogAction onClick={performDelete} disabled={isDeleting}>
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                'Continue'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
