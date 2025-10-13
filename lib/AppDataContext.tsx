@@ -1,27 +1,16 @@
 'use client';
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createContext, useContext, useMemo, useState } from 'react';
 
-import { getExercises, getInBodyData, getWorkoutSessions } from '@/lib/db';
-import {
-  ExerciseData,
-  InBodyDataDocument,
-  WorkoutSessionDocument,
-} from '@/lib/types';
+import { getInBodyData, getWorkoutSessions } from '@/lib/db';
+import { InBodyDataDocument, WorkoutSessionDocument } from '@/lib/types';
 
 interface AppDataContextValue {
   loading: boolean;
   error: string | null;
   workoutSessions: WorkoutSessionDocument[];
   inBodyRecords: (InBodyDataDocument & { id: string })[];
-  exercises: ExerciseData[];
   // Time range filtering for dashboard components
   timeRange: 'week' | 'month' | 'all';
   setTimeRange: (range: 'week' | 'month' | 'all') => void;
@@ -43,42 +32,49 @@ export function AppDataProvider({
   uid: string;
   children: React.ReactNode;
 }) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [workoutSessions, setWorkoutSessions] = useState<
-    WorkoutSessionDocument[]
-  >([]);
-  const [inBodyRecords, setInBodyRecords] = useState<
-    (InBodyDataDocument & { id: string })[]
-  >([]);
-  const [exercises, setExercises] = useState<ExerciseData[]>([]);
+  const queryClient = useQueryClient();
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('week');
 
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [s, i, e] = await Promise.all([
-        getWorkoutSessions({ uid }),
-        getInBodyData({ uid }),
-        getExercises(),
-      ]);
-      setWorkoutSessions(s);
-      setInBodyRecords(
-        i as unknown as Array<InBodyDataDocument & { id: string }>
-      );
-      setExercises(e);
-    } catch (err) {
-      setError((err as Error).message ?? 'Failed to load data');
-    } finally {
-      setLoading(false);
-    }
-  }, [uid]);
+  // Query for workout sessions with React Query
+  const {
+    data: workoutSessions = [],
+    isLoading: workoutLoading,
+    error: workoutError,
+  } = useQuery({
+    queryKey: ['workoutSessions', uid],
+    queryFn: () => getWorkoutSessions({ uid }),
+    enabled: !!uid, // Only run query if uid exists
+  });
 
-  useEffect(() => {
-    // Fetch once after login
-    void fetchAll();
-  }, [fetchAll]);
+  // Query for InBody records with React Query
+  const {
+    data: inBodyRecords = [],
+    isLoading: inBodyLoading,
+    error: inBodyError,
+  } = useQuery({
+    queryKey: ['inBodyRecords', uid],
+    queryFn: async () => {
+      const data = await getInBodyData({ uid });
+      return data as unknown as Array<InBodyDataDocument & { id: string }>;
+    },
+    enabled: !!uid, // Only run query if uid exists
+  });
+
+  const loading = workoutLoading || inBodyLoading;
+  const error = workoutError?.message || inBodyError?.message || null;
+
+  // Refresh function - invalidate cache and refetch
+  const refresh = async () => {
+    // Invalidate cache to ensure data is fresh after mutations
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ['workoutSessions', uid],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ['inBodyRecords', uid],
+      }),
+    ]);
+  };
 
   // Helper: compute start date for filtering
   const rangeStartDate = useMemo(() => {
@@ -132,14 +128,13 @@ export function AppDataProvider({
     error,
     workoutSessions,
     inBodyRecords,
-    exercises,
     timeRange,
     setTimeRange,
     filteredWorkoutSessions,
     // weeklySummaryData,
     // latestInBody,
     // topExercises,
-    refresh: fetchAll,
+    refresh,
   };
 
   return (
