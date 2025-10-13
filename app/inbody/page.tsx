@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Plus, X } from 'lucide-react';
+import { Loader2, Plus, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -53,6 +53,7 @@ function InBodyPageContent() {
   const [recordToDelete, setRecordToDelete] = useState<
     (InBodyDataDocument & { id: string }) | null
   >(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -84,6 +85,7 @@ function InBodyPageContent() {
 
   const performDelete = async () => {
     if (!recordToDelete) return;
+    setIsDeleting(true);
     try {
       await deleteInBodyData({ recordId: recordToDelete.id });
       void refresh();
@@ -97,6 +99,8 @@ function InBodyPageContent() {
     } catch (e) {
       console.error(e);
       toast.error('Failed to delete record. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -196,11 +200,21 @@ function InBodyPageContent() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setRecordToDelete(null)}>
+            <AlertDialogCancel
+              onClick={() => setRecordToDelete(null)}
+              disabled={isDeleting}
+            >
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={performDelete}>
-              Continue
+            <AlertDialogAction onClick={performDelete} disabled={isDeleting}>
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                'Continue'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
