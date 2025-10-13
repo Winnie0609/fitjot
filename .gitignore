@@ -43,3 +43,15 @@ next-env.d.ts
 # other
 note/
 scripts
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Sensitive files
+service_account.json
+storageState.json
