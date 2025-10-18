@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Activity,
   BarChart3,
   Dumbbell,
   LayoutDashboard,
@@ -12,6 +11,7 @@ import {
   Settings,
   X,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -107,29 +107,43 @@ export function Sidebar({ className }: SidebarProps) {
       >
         {/* Header */}
         <div
-          className="flex h-12 items-center px-6 mt-8"
+          className="flex h-12 items-center px-4 mt-2"
           onClick={() => router.push('/')}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <Activity className="text-primary" />
+            {isCollapsed && !isMobileMenuOpen && (
+              <div className="w-6 relative flex-shrink-0">
+                <Image
+                  src="/images/logo-single.png"
+                  alt="FitJot Logo"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
+
             {(!isCollapsed || isMobileMenuOpen) && (
-              <span className="font-semibold text-lg whitespace-nowrap overflow-hidden">
-                Workout Log
-              </span>
+              <div className="w-24 h-10 relative flex-shrink-0">
+                <Image
+                  src="/images/logo_black.png"
+                  alt="FitJot Logo"
+                  width={96}
+                  height={40}
+                  className="w-full h-full object-contain"
+                />
+              </div>
             )}
           </div>
 
           <div className="flex justify-center items-center flex-shrink-0">
-            <Button
-              variant="ghost"
-              className={cn(
-                'w-full justify-start',
-                (isCollapsed || isMobileMenuOpen) && 'hidden'
-              )}
+            <div
+              className="cursor-pointer"
               onClick={() => setIsCollapsed(!isCollapsed)}
+              hidden={isCollapsed || isMobileMenuOpen}
             >
               <PanelLeftClose className="h-4 w-4" />
-            </Button>
+            </div>
           </div>
 
           <Button
