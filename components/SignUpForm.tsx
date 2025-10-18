@@ -76,6 +76,7 @@ export function SignUpForm({
           uid: userCredential.user.uid,
           email: values.email,
           displayName: `${values.firstName} ${values.lastName}`,
+          isOnboard: false,
         },
       });
 

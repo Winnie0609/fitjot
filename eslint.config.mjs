@@ -1,5 +1,5 @@
 import { FlatCompat } from '@eslint/eslintrc';
-import simpleImportSort from "eslint-plugin-simple-import-sort";
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -19,6 +19,9 @@ const eslintConfig = [
       'out/**',
       'build/**',
       'next-env.d.ts',
+      'playwright-report/**',
+      'test-results/**',
+      'blob-report/**',
     ],
   },
   {

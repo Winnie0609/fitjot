@@ -43,6 +43,7 @@ export function GoogleLoginButton({ isLogin }: { isLogin: boolean }) {
             uid: user.uid,
             email: user.email,
             displayName: user.displayName,
+            isOnboard: false,
           },
         });
       } catch (error) {
