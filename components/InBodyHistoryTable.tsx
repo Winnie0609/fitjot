@@ -1,7 +1,8 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Edit, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Edit, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { InBodyDataDocument } from '@/lib/types';
@@ -17,6 +18,15 @@ export function InBodyHistoryTable({
   onEdit,
   onDelete,
 }: InBodyHistoryTableProps) {
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (recordId: string) => {
+    const next = new Set(expandedRows);
+    if (next.has(recordId)) next.delete(recordId);
+    else next.add(recordId);
+    setExpandedRows(next);
+  };
+
   if (records.length === 0) {
     return (
       <div className="text-center text-muted-foreground mt-8">
@@ -46,6 +56,7 @@ export function InBodyHistoryTable({
             const weight = record.bodyComposition?.totalWeight?.value;
             const pbf = record.bodyComposition?.pbf?.value;
             const score = record.overallScore;
+            const isExpanded = expandedRows.has(record.id);
 
             return (
               <div
@@ -53,7 +64,10 @@ export function InBodyHistoryTable({
                 key={record.id}
                 className="border-b last:border-b-0"
               >
-                <div className="grid grid-cols-12 gap-4 p-4 px-8 hover:bg-muted/20 transition-colors items-center">
+                <div
+                  className="grid grid-cols-12 gap-4 p-4 px-8 hover:bg-muted/20 transition-colors items-center cursor-pointer"
+                  onClick={() => toggleRow(record.id)}
+                >
                   {/* Date */}
                   <div className="col-span-3 text-sm">
                     {date ? format(date, 'dd MMM yyyy') : '-'}
@@ -92,8 +106,97 @@ export function InBodyHistoryTable({
                     >
                       <Trash2 className="h-3 w-3 text-destructive" />
                     </Button>
+                    {isExpanded ? (
+                      <ChevronUp className="h-3 w-3 mr-1" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3 mr-1" />
+                    )}
                   </div>
                 </div>
+
+                {/* Expanded Content */}
+                {isExpanded && (
+                  <div
+                    className="px-8 pb-4 bg-muted/10"
+                    onClick={() => toggleRow(record.id)}
+                  >
+                    <div className="grid gap-4">
+                      {/* Body Composition Summary */}
+                      {record.bodyComposition && (
+                        <div className="border-l-2 border-primary/20 pl-4">
+                          <h4 className="font-medium text-sm">
+                            Body Composition
+                          </h4>
+                          <div className="mt-1 text-xs text-muted-foreground grid grid-cols-2 md:grid-cols-3 gap-y-1">
+                            <div>
+                              Weight:{' '}
+                              {record.bodyComposition.totalWeight?.value}
+                              {record.bodyComposition.totalWeight ? ' kg' : ''}
+                            </div>
+                            <div>
+                              SMM:{' '}
+                              {record.bodyComposition.skeletalMuscleMass?.value}
+                              {record.bodyComposition.skeletalMuscleMass
+                                ? ' kg'
+                                : ''}
+                            </div>
+                            <div>
+                              BFM: {record.bodyComposition.bodyFatMass?.value}
+                              {record.bodyComposition.bodyFatMass ? ' kg' : ''}
+                            </div>
+                            <div>BMI: {record.bodyComposition.bmi?.value}</div>
+                            <div>PBF: {record.bodyComposition.pbf?.value}%</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Body Composition Analysis (optional) */}
+                      {record.bodyCompositionAnalysis && (
+                        <div className="border-l-2 border-muted pl-4">
+                          <h4 className="font-medium text-sm">
+                            Body Composition Analysis
+                          </h4>
+                          <div className="mt-1 text-xs text-muted-foreground grid grid-cols-2 md:grid-cols-3 gap-y-1">
+                            <div>
+                              TBW:{' '}
+                              {
+                                record.bodyCompositionAnalysis.totalBodyWater
+                                  ?.value
+                              }
+                              {record.bodyCompositionAnalysis.totalBodyWater
+                                ? ' L'
+                                : ''}
+                            </div>
+                            <div>
+                              Protein:{' '}
+                              {record.bodyCompositionAnalysis.protein?.value}
+                              {record.bodyCompositionAnalysis.protein
+                                ? ' kg'
+                                : ''}
+                            </div>
+                            <div>
+                              Mineral:{' '}
+                              {record.bodyCompositionAnalysis.mineral?.value}
+                              {record.bodyCompositionAnalysis.mineral
+                                ? ' kg'
+                                : ''}
+                            </div>
+                            <div>
+                              BFM:{' '}
+                              {
+                                record.bodyCompositionAnalysis.bodyFatMass
+                                  ?.value
+                              }
+                              {record.bodyCompositionAnalysis.bodyFatMass
+                                ? ' kg'
+                                : ''}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -107,6 +210,7 @@ export function InBodyHistoryTable({
           const weight = record.bodyComposition?.totalWeight?.value;
           const pbf = record.bodyComposition?.pbf?.value;
           const score = record.overallScore;
+          const isExpanded = expandedRows.has(record.id);
 
           return (
             <div key={record.id} className="border rounded-lg overflow-hidden">
@@ -136,8 +240,45 @@ export function InBodyHistoryTable({
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
+                    {isExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
                   </div>
                 </div>
+
+                {/* Mobile Expanded Content */}
+                {isExpanded && (
+                  <div className="mt-3 space-y-2">
+                    {record.bodyComposition && (
+                      <div className="text-xs text-muted-foreground">
+                        <div className="font-medium text-foreground mb-1">
+                          Body Composition
+                        </div>
+                        <div className="grid grid-cols-2 gap-y-1">
+                          <div>
+                            Weight: {record.bodyComposition.totalWeight?.value}
+                            {record.bodyComposition.totalWeight ? ' kg' : ''}
+                          </div>
+                          <div>
+                            SMM:{' '}
+                            {record.bodyComposition.skeletalMuscleMass?.value}
+                            {record.bodyComposition.skeletalMuscleMass
+                              ? ' kg'
+                              : ''}
+                          </div>
+                          <div>
+                            BFM: {record.bodyComposition.bodyFatMass?.value}
+                            {record.bodyComposition.bodyFatMass ? ' kg' : ''}
+                          </div>
+                          <div>BMI: {record.bodyComposition.bmi?.value}</div>
+                          <div>PBF: {record.bodyComposition.pbf?.value}%</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );
