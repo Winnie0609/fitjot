@@ -42,6 +42,7 @@ export interface UserProfile {
   uid: string;
   email: string | null;
   displayName: string | null;
+  isOnboard?: boolean;
 }
 
 export interface UserDocument {
@@ -50,6 +51,7 @@ export interface UserDocument {
   displayName: string | null;
   createdAt: Date;
   updatedAt: Date;
+  isOnboard?: boolean;
 }
 
 /**
@@ -144,7 +146,7 @@ export interface InBodyDataDocument {
       value: number;
       unit: '%';
     };
-    segmentalLeanAnalysis: {
+    segmentalLeanAnalysis?: {
       rightArm: {
         weight: number;
         unit: 'kg' | 'lbs';
@@ -176,7 +178,7 @@ export interface InBodyDataDocument {
         status: 'normal' | 'low' | 'high';
       };
     };
-    segmentalFatAnalysis: {
+    segmentalFatAnalysis?: {
       rightArm: {
         weight: number;
         unit: 'kg' | 'lbs';

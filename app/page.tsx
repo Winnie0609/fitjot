@@ -9,9 +9,6 @@ import { useAuth } from '@/lib/AuthContext';
 export default function HomePage() {
   const { user, loading } = useAuth();
 
-  console.log('user', user);
-  console.log('loading', loading);
-
   if (loading) {
     return <FullScreenLoader />;
   }
