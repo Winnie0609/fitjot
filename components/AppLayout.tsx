@@ -1,6 +1,5 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -9,6 +8,8 @@ import { AppDataProvider } from '@/lib/AppDataContext';
 import { useAuth } from '@/lib/AuthContext';
 import { SidebarProvider } from '@/lib/SidebarContext';
 import { cn } from '@/lib/utils';
+
+import { FullScreenLoader } from './FullScreenLoader';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -37,14 +38,7 @@ function AppLayoutInner({
 
   // Loading state for dashboard pages
   if (authLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
   // Redirect if not authenticated (this should be handled by useEffect, but just in case)
