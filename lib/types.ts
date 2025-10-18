@@ -146,7 +146,7 @@ export interface InBodyDataDocument {
       value: number;
       unit: '%';
     };
-    segmentalLeanAnalysis: {
+    segmentalLeanAnalysis?: {
       rightArm: {
         weight: number;
         unit: 'kg' | 'lbs';
@@ -178,7 +178,7 @@ export interface InBodyDataDocument {
         status: 'normal' | 'low' | 'high';
       };
     };
-    segmentalFatAnalysis: {
+    segmentalFatAnalysis?: {
       rightArm: {
         weight: number;
         unit: 'kg' | 'lbs';
