@@ -111,9 +111,9 @@ export function WorkoutHistoryTable({
                     {format(session.date, 'dd MMM yyyy')}
                   </div>
                   {/* categories */}
-                  <div className="col-span-3">
+                  <div className="col-span-3 max-w-[200px]">
                     <div className="flex flex-wrap gap-1">
-                      {categories.slice(0, 2).map((category) => (
+                      {categories.slice(0, 5).map((category) => (
                         <Badge
                           key={category}
                           variant="secondary"
@@ -122,9 +122,9 @@ export function WorkoutHistoryTable({
                           {category}
                         </Badge>
                       ))}
-                      {categories.length > 2 && (
+                      {categories.length > 5 && (
                         <Badge variant="outline" className="text-xs">
-                          +{categories.length - 2}
+                          +{categories.length - 5}
                         </Badge>
                       )}
                     </div>
