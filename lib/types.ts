@@ -42,6 +42,7 @@ export interface UserProfile {
   uid: string;
   email: string | null;
   displayName: string | null;
+  isOnboard?: boolean;
 }
 
 export interface UserDocument {
@@ -50,6 +51,7 @@ export interface UserDocument {
   displayName: string | null;
   createdAt: Date;
   updatedAt: Date;
+  isOnboard?: boolean;
 }
 
 /**

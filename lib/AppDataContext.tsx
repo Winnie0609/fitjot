@@ -3,13 +3,18 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useMemo, useState } from 'react';
 
-import { getInBodyData, getWorkoutSessions } from '@/lib/db';
-import { InBodyDataDocument, WorkoutSessionDocument } from '@/lib/types';
+import { getInBodyData, getUser, getWorkoutSessions } from '@/lib/db';
+import {
+  InBodyDataDocument,
+  UserProfile,
+  WorkoutSessionDocument,
+} from '@/lib/types';
 
 interface AppDataContextValue {
   loading: boolean;
   error: string | null;
   workoutSessions: WorkoutSessionDocument[];
+  userProfile: UserProfile | null;
   inBodyRecords: (InBodyDataDocument & { id: string })[];
   // Time range filtering for dashboard components
   timeRange: 'week' | 'month' | 'all';
@@ -60,8 +65,22 @@ export function AppDataProvider({
     enabled: !!uid, // Only run query if uid exists
   });
 
-  const loading = workoutLoading || inBodyLoading;
-  const error = workoutError?.message || inBodyError?.message || null;
+  const {
+    data: userProfile = null,
+    isLoading: userProfileLoading,
+    error: userProfileError,
+  } = useQuery({
+    queryKey: ['userProfile', uid],
+    queryFn: () => getUser({ uid }),
+    enabled: uid ? true : false,
+  });
+
+  const loading = workoutLoading || inBodyLoading || userProfileLoading;
+  const error =
+    workoutError?.message ||
+    inBodyError?.message ||
+    userProfileError?.message ||
+    null;
 
   // Refresh function - invalidate cache and refetch
   const refresh = async () => {
@@ -72,6 +91,9 @@ export function AppDataProvider({
       }),
       queryClient.invalidateQueries({
         queryKey: ['inBodyRecords', uid],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ['userProfile', uid],
       }),
     ]);
   };
@@ -131,6 +153,7 @@ export function AppDataProvider({
     timeRange,
     setTimeRange,
     filteredWorkoutSessions,
+    userProfile,
     // weeklySummaryData,
     // latestInBody,
     // topExercises,
