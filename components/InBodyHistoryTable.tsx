@@ -131,21 +131,25 @@ export function InBodyHistoryTable({
                             <div>
                               Weight:{' '}
                               {record.bodyComposition.totalWeight?.value}
-                              {record.bodyComposition.totalWeight ? ' kg' : ''}
+                              {record.bodyComposition.totalWeight ? ' kg' : '-'}
                             </div>
                             <div>
                               SMM:{' '}
                               {record.bodyComposition.skeletalMuscleMass?.value}
                               {record.bodyComposition.skeletalMuscleMass
                                 ? ' kg'
-                                : ''}
+                                : '-'}
                             </div>
                             <div>
                               BFM: {record.bodyComposition.bodyFatMass?.value}
-                              {record.bodyComposition.bodyFatMass ? ' kg' : ''}
+                              {record.bodyComposition.bodyFatMass ? ' kg' : '-'}
                             </div>
-                            <div>BMI: {record.bodyComposition.bmi?.value}</div>
-                            <div>PBF: {record.bodyComposition.pbf?.value}%</div>
+                            <div>
+                              BMI: {record.bodyComposition.bmi?.value ?? '-'}
+                            </div>
+                            <div>
+                              PBF: {record.bodyComposition.pbf?.value ?? '-'}%
+                            </div>
                           </div>
                         </div>
                       )}
@@ -165,21 +169,21 @@ export function InBodyHistoryTable({
                               }
                               {record.bodyCompositionAnalysis.totalBodyWater
                                 ? ' L'
-                                : ''}
+                                : '-'}
                             </div>
                             <div>
                               Protein:{' '}
                               {record.bodyCompositionAnalysis.protein?.value}
                               {record.bodyCompositionAnalysis.protein
                                 ? ' kg'
-                                : ''}
+                                : '-'}
                             </div>
                             <div>
                               Mineral:{' '}
                               {record.bodyCompositionAnalysis.mineral?.value}
                               {record.bodyCompositionAnalysis.mineral
                                 ? ' kg'
-                                : ''}
+                                : '-'}
                             </div>
                             <div>
                               BFM:{' '}
@@ -189,7 +193,7 @@ export function InBodyHistoryTable({
                               }
                               {record.bodyCompositionAnalysis.bodyFatMass
                                 ? ' kg'
-                                : ''}
+                                : '-'}
                             </div>
                           </div>
                         </div>
@@ -259,21 +263,25 @@ export function InBodyHistoryTable({
                         <div className="grid grid-cols-2 gap-y-1">
                           <div>
                             Weight: {record.bodyComposition.totalWeight?.value}
-                            {record.bodyComposition.totalWeight ? ' kg' : ''}
+                            {record.bodyComposition.totalWeight ? ' kg' : '-'}
                           </div>
                           <div>
                             SMM:{' '}
                             {record.bodyComposition.skeletalMuscleMass?.value}
                             {record.bodyComposition.skeletalMuscleMass
                               ? ' kg'
-                              : ''}
+                              : '-'}
                           </div>
                           <div>
                             BFM: {record.bodyComposition.bodyFatMass?.value}
-                            {record.bodyComposition.bodyFatMass ? ' kg' : ''}
+                            {record.bodyComposition.bodyFatMass ? ' kg' : '-'}
                           </div>
-                          <div>BMI: {record.bodyComposition.bmi?.value}</div>
-                          <div>PBF: {record.bodyComposition.pbf?.value}%</div>
+                          <div>
+                            BMI: {record.bodyComposition.bmi?.value ?? '-'}
+                          </div>
+                          <div>
+                            PBF: {record.bodyComposition.pbf?.value ?? '-'}%
+                          </div>
                         </div>
                       </div>
                     )}

@@ -185,7 +185,7 @@ function InBodyPageContent() {
       )}
 
       <AlertDialog
-        open={!!recordToDelete && isDeleting}
+        open={!!recordToDelete || (!!recordToDelete && isDeleting)}
         onOpenChange={(open) => !open && setRecordToDelete(null)}
       >
         <AlertDialogContent>
