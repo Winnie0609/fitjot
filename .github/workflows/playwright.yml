@@ -1,27 +1,47 @@
 name: Playwright Tests
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    env:
+      # Use Firebase emulators during CI runs
+      NEXT_PUBLIC_USE_FIREBASE_EMULATORS: 'true'
+      # Provide harmless defaults so Next.js can boot without real keys
+      NEXT_PUBLIC_FIREBASE_API_KEY: 'test'
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'localhost'
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'demo-project'
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 'demo-project.appspot.com'
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '1234567890'
+      NEXT_PUBLIC_FIREBASE_APP_ID: '1:1234567890:web:abcdef'
+      NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: 'G-TESTME'
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-    - name: Install dependencies
-      run: npm install -g pnpm && pnpm install
-    - name: Install Playwright Browsers
-      run: pnpm exec playwright install --with-deps
-    - name: Run Playwright tests
-      run: pnpm exec playwright test
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps
+      - name: Start Firebase Emulators
+        run: |
+          npx firebase emulators:start --only auth,firestore --project demo-test &
+          npx wait-on tcp:8080 tcp:9099
+      - name: Seed Auth emulator user
+        run: |
+          curl -s "http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=any" \
+            -H 'Content-Type: application/json' \
+            --data '{"email":"test-user@example.com","password":"password123","returnSecureToken":true}' || true
+      - name: Run Playwright tests
+        run: pnpm exec playwright test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
