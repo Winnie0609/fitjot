@@ -156,7 +156,7 @@ export function Sidebar({ className }: SidebarProps) {
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {isCollapsed && !isMobileMenuOpen && (
-              <div className="w-6 relative flex-shrink-0">
+              <div className="w-6 relative flex-shrink-0 ml-1">
                 <Image
                   src="/images/logo-single.png"
                   alt="FitJot Logo"

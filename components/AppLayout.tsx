@@ -53,7 +53,7 @@ function AppLayoutInner({
         <Sidebar />
         <main
           className={cn(
-            'flex-1 min-h-0 overflow-y-auto bg-muted/10 transition-all duration-300 ',
+            'flex-1 min-h-0 bg-muted/10 transition-all duration-300 overflow-y-auto ',
             // Mobile: no margin (sidebar is overlay when open)
             'ml-0',
             // Desktop: margin based on sidebar state
