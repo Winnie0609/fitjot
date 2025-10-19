@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Activity,
   BarChart3,
   Dumbbell,
   LayoutDashboard,
@@ -10,10 +9,13 @@ import {
   PanelLeftClose,
   PanelRightClose,
   Settings,
+  Sparkles,
   X,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -24,8 +26,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAppData } from '@/lib/AppDataContext';
 import { useAuth } from '@/lib/AuthContext';
+import { addInBodyData, addWorkoutSession } from '@/lib/db';
 import { auth } from '@/lib/firebase';
+import {
+  getSampleInBodyDataFor,
+  getSampleWorkoutSessionsFor,
+} from '@/lib/sample-data';
 import { useSidebar } from '@/lib/SidebarContext';
 import { cn } from '@/lib/utils';
 
@@ -57,20 +65,56 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
+  const [isSeeding, setIsSeeding] = useState(false);
+  const { userProfile, workoutSessions, inBodyRecords, refresh, loading } =
+    useAppData();
+
+  const shouldShowSeed =
+    !loading &&
+    !userProfile?.isOnboard &&
+    workoutSessions.length === 0 &&
+    inBodyRecords.length === 0;
+
+  const handleSeedData = async () => {
+    if (!user) return;
+    setIsSeeding(true);
+    const id = toast.loading('Generating sample data...');
+    try {
+      const workouts = getSampleWorkoutSessionsFor(user.uid);
+      const inbodies = getSampleInBodyDataFor(user.uid);
+
+      for (const w of workouts) {
+        await addWorkoutSession({ uid: user.uid, sessionData: w });
+      }
+
+      for (const r of inbodies) {
+        await addInBodyData({ uid: user.uid, inBodyData: r });
+      }
+
+      toast.success('Sample data generated successfully!');
+      await refresh();
+    } catch (error) {
+      console.error('Failed to seed data:', error);
+      toast.error('Failed to generate sample data.');
+    } finally {
+      setIsSeeding(false);
+      toast.dismiss(id);
+    }
+  };
 
   const handleLogout = async () => {
     try {
       await auth.signOut();
-      toast.success('Logged out successfully');
+      toast.success('You have successfully logged out!');
       router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error('Failed to logout');
+      toast.error('There was an error logging out. Please try again.');
     }
   };
 
   const handleSettings = () => {
-    toast.info('Settings page coming soon');
+    toast.info('Settings page is coming soon!');
   };
 
   return (
@@ -107,29 +151,43 @@ export function Sidebar({ className }: SidebarProps) {
       >
         {/* Header */}
         <div
-          className="flex h-12 items-center px-6 mt-8"
+          className="flex h-12 items-center px-4 mt-2"
           onClick={() => router.push('/')}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <Activity className="text-primary" />
+            {isCollapsed && !isMobileMenuOpen && (
+              <div className="w-6 relative flex-shrink-0 ml-1">
+                <Image
+                  src="/images/logo-single.png"
+                  alt="FitJot Logo"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
+
             {(!isCollapsed || isMobileMenuOpen) && (
-              <span className="font-semibold text-lg whitespace-nowrap overflow-hidden">
-                Workout Log
-              </span>
+              <div className="w-24 h-10 relative flex-shrink-0">
+                <Image
+                  src="/images/logo_black.png"
+                  alt="FitJot Logo"
+                  width={96}
+                  height={40}
+                  className="w-full h-full object-contain"
+                />
+              </div>
             )}
           </div>
 
           <div className="flex justify-center items-center flex-shrink-0">
-            <Button
-              variant="ghost"
-              className={cn(
-                'w-full justify-start',
-                (isCollapsed || isMobileMenuOpen) && 'hidden'
-              )}
+            <div
+              className="cursor-pointer"
               onClick={() => setIsCollapsed(!isCollapsed)}
+              hidden={isCollapsed || isMobileMenuOpen}
             >
               <PanelLeftClose className="h-4 w-4" />
-            </Button>
+            </div>
           </div>
 
           <Button
@@ -180,7 +238,7 @@ export function Sidebar({ className }: SidebarProps) {
                 <Button
                   variant={isActive ? 'secondary' : 'ghost'}
                   className={cn(
-                    'w-full justify-start mb-2 p-2',
+                    'w-full justify-start mb-1 p-2',
                     isCollapsed &&
                       !isMobileMenuOpen &&
                       'md:justify-center md:px-2 h-8 w-8'
@@ -194,6 +252,40 @@ export function Sidebar({ className }: SidebarProps) {
               </Link>
             );
           })}
+          {/* Seed Data Section */}
+          {shouldShowSeed && (
+            <div
+              className={cn(
+                'mt-10',
+                isCollapsed && !isMobileMenuOpen && 'px-2'
+              )}
+            >
+              <Button
+                variant="ghost"
+                onClick={handleSeedData}
+                disabled={isSeeding}
+                className={cn(
+                  'w-full justify-start mb-1 p-2 text-black hover:bg-transparent relative',
+                  isCollapsed &&
+                    !isMobileMenuOpen &&
+                    'md:justify-center md:px-2 h-8 w-8'
+                )}
+                style={{
+                  borderRadius: '20px',
+                  background:
+                    'linear-gradient(white, white) padding-box, linear-gradient(to right, #3b82f6, #8b5cf6, #ec4899) border-box',
+                  border: '2px solid transparent',
+                }}
+              >
+                <Sparkles className="h-4 w-4 text-black" />
+                {(!isCollapsed || isMobileMenuOpen) && (
+                  <span className="ml-1 text-black">
+                    Start with sample data
+                  </span>
+                )}
+              </Button>
+            </div>
+          )}
         </nav>
 
         {/* User Section */}
