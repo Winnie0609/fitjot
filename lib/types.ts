@@ -13,6 +13,7 @@ export interface WorkoutSet {
  */
 export interface Exercise {
   id: string;
+  exerciseId: string;
   name: string;
   rpe?: number; // Rate of Perceived Exertion
   sets: WorkoutSet[];
@@ -41,6 +42,7 @@ export interface UserProfile {
   uid: string;
   email: string | null;
   displayName: string | null;
+  isOnboard?: boolean;
 }
 
 export interface UserDocument {
@@ -49,6 +51,7 @@ export interface UserDocument {
   displayName: string | null;
   createdAt: Date;
   updatedAt: Date;
+  isOnboard?: boolean;
 }
 
 /**
@@ -66,6 +69,7 @@ export interface WorkoutSetDocument {
  */
 export interface ExerciseDocument {
   id: string;
+  exerciseId: string; // This is the ID from the global exercise list
   name: string;
   rpe?: number;
   sets: WorkoutSetDocument[];
@@ -142,7 +146,7 @@ export interface InBodyDataDocument {
       value: number;
       unit: '%';
     };
-    segmentalLeanAnalysis: {
+    segmentalLeanAnalysis?: {
       rightArm: {
         weight: number;
         unit: 'kg' | 'lbs';
@@ -174,7 +178,7 @@ export interface InBodyDataDocument {
         status: 'normal' | 'low' | 'high';
       };
     };
-    segmentalFatAnalysis: {
+    segmentalFatAnalysis?: {
       rightArm: {
         weight: number;
         unit: 'kg' | 'lbs';
@@ -209,4 +213,28 @@ export interface InBodyDataDocument {
   };
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+/**
+ * Represents a single exercise from the global 'exercises' collection.
+ */
+export interface ExerciseData {
+  id: string;
+  titleEn: string;
+  titleZh: string;
+  aliases: string[];
+  force: string | null;
+  level: string;
+  mechanic: string | null;
+  bodyPart: string;
+  primaryMuscles: string[];
+  secondaryMuscles: string[];
+  equipment: string | null;
+  instructionsEn: string[];
+  instructionsZh: string[];
+  category: string;
+  thumbnailUrl?: string;
+  isCardio: boolean;
+  type: 'global' | 'custom';
+  createdBy: 'system' | string; // 'system' or a user ID
 }

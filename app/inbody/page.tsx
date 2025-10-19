@@ -1,12 +1,32 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Edit, Loader2, Plus, Trash2, X } from 'lucide-react';
+import { Loader2, Plus, X } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { AppLayout } from '@/components/AppLayout';
-import { InBodyForm } from '@/components/InBodyForm';
+import { InBodyHistoryTable } from '@/components/InBodyHistoryTable';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Lazy load InBodyForm - only load when modal opens
+const InBodyForm = dynamic(
+  () =>
+    import('@/components/InBodyForm').then((mod) => ({
+      default: mod.InBodyForm,
+    })),
+  {
+    loading: () => (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    ),
+    ssr: false, // Form doesn't need SSR
+  }
+);
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,17 +38,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAppData } from '@/lib/AppDataContext';
 import { useAuth } from '@/lib/AuthContext';
-import { deleteInBodyData, getInBodyData } from '@/lib/db';
+import { deleteInBodyData } from '@/lib/db';
 import { InBodyDataDocument } from '@/lib/types';
 
-export default function InBodyPage() {
+function InBodyPageContent() {
   const { user } = useAuth();
-  const [records, setRecords] = useState<
-    Array<InBodyDataDocument & { id: string }>
-  >([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { inBodyRecords, refresh, loading } = useAppData();
   const [editingRecord, setEditingRecord] = useState<
     (InBodyDataDocument & { id: string }) | null
   >(null);
@@ -36,25 +53,10 @@ export default function InBodyPage() {
   const [recordToDelete, setRecordToDelete] = useState<
     (InBodyDataDocument & { id: string }) | null
   >(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-
-    const load = async () => {
-      setIsLoading(true);
-      try {
-        const list = await getInBodyData({ uid: user.uid });
-        setRecords(
-          list as unknown as Array<InBodyDataDocument & { id: string }>
-        );
-      } catch (e) {
-        console.error(e);
-        toast.error('Failed to load records');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
   }, [user]);
 
   const handleFormClose = () => {
@@ -62,16 +64,8 @@ export default function InBodyPage() {
     setEditingRecord(null);
   };
 
-  const handleRecordSaved = (
-    savedRecord: InBodyDataDocument & { id: string }
-  ) => {
-    if (editingRecord) {
-      setRecords(
-        records.map((r) => (r.id === savedRecord.id ? savedRecord : r))
-      );
-    } else {
-      setRecords([savedRecord, ...records]);
-    }
+  const handleRecordSaved = async () => {
+    await refresh(); // Wait for data to refresh before closing form
     handleFormClose();
   };
 
@@ -91,106 +85,90 @@ export default function InBodyPage() {
 
   const performDelete = async () => {
     if (!recordToDelete) return;
+    setIsDeleting(true);
     try {
       await deleteInBodyData({ recordId: recordToDelete.id });
-      setRecords((prev) => prev.filter((r) => r.id !== recordToDelete.id));
-      toast.success('Record deleted');
+      void refresh();
+      toast.success(
+        `InBody record for ${format(
+          recordToDelete.reportDate,
+          'dd MMM yyyy'
+        )} has been deleted.`
+      );
       setRecordToDelete(null);
     } catch (e) {
       console.error(e);
-      toast.error('Failed to delete');
+      toast.error('Failed to delete record. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
-    <AppLayout>
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Loading records...</p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center md:flex-row flex-col gap-4 items-start">
+        <div>
+          <h1 className="text-3xl font-bold">InBody Records</h1>
+          <p className="text-muted-foreground">
+            Track your body composition over time
+          </p>
+        </div>
+        <Button onClick={handleAddNew} size="lg">
+          <Plus className="h-4 w-4 mr-2" />
+          Add New Record
+        </Button>
+      </div>
+
+      {loading ? (
+        <div data-testid="skeleton-loader" className="overflow-hidden">
+          {/* Desktop Table Skeleton */}
+          <div className="hidden md:block">
+            <div className="border rounded-lg">
+              {/* Table Header */}
+              <div className="grid grid-cols-12 gap-4 p-4 px-8 bg-muted/30 border-b text-sm font-medium text-muted-foreground">
+                <div className="col-span-3">Date</div>
+                <div className="col-span-2">Weight (kg)</div>
+                <div className="col-span-2">PBF (%)</div>
+                <div className="col-span-2">Score</div>
+                <div className="col-span-3"></div>
+              </div>
+              {/* Table Rows Skeleton */}
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="border-b last:border-b-0">
+                  <div className="p-4 px-8">
+                    <Skeleton className="h-5 w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile List Skeleton */}
+          <div className="md:hidden space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="border rounded-lg p-4">
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ))}
           </div>
         </div>
       ) : (
-        <>
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold">InBody Records</h1>
-              <p className="text-muted-foreground">
-                Track your body composition over time
-              </p>
-            </div>
-            <Button onClick={handleAddNew} size="lg">
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Record
-            </Button>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Records</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {records.length === 0 ? (
-                <div className="text-sm text-muted-foreground">
-                  No records yet.
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {records.map((r) => {
-                    const date = r.reportDate || undefined;
-                    const weight = r.bodyComposition?.totalWeight?.value;
-                    const pbf = r.bodyComposition?.pbf?.value;
-                    const score = r.overallScore;
-                    return (
-                      <div
-                        key={r.id}
-                        className="flex items-center justify-between border rounded-md p-3"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="text-sm min-w-[120px]">
-                            {date ? format(date, 'dd MMM yyyy') : '-'}
-                          </div>
-                          <div className="text-sm">
-                            Weight: {weight ?? '-'} kg
-                          </div>
-                          <div className="text-sm">PBF: {pbf ?? '-'} %</div>
-                          <div className="text-sm">Score: {score ?? '-'}</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEdit(r)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => handleDeleteRequest(r)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </>
+        <InBodyHistoryTable
+          records={inBodyRecords}
+          onEdit={handleEdit}
+          onDelete={(recordId) => {
+            const record = inBodyRecords.find((r) => r.id === recordId);
+            if (record) handleDeleteRequest(record);
+          }}
+        />
       )}
 
       {isFormOpen && (
         <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto">
-          <div className="container mx-auto max-w-4xl p-4 md:p-8">
+          <div className="container mx-auto max-w-2xl p-4 md:p-8">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">
-                {editingRecord
-                  ? 'Edit InBody Record'
-                  : 'Create New InBody Record'}
+                {editingRecord ? 'Edit InBody Record' : 'Create a New Record'}
               </h2>
               <Button variant="ghost" size="icon" onClick={handleFormClose}>
                 <X className="h-5 w-5" />
@@ -207,7 +185,7 @@ export default function InBodyPage() {
       )}
 
       <AlertDialog
-        open={!!recordToDelete}
+        open={!!recordToDelete || (!!recordToDelete && isDeleting)}
         onOpenChange={(open) => !open && setRecordToDelete(null)}
       >
         <AlertDialogContent>
@@ -222,15 +200,33 @@ export default function InBodyPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setRecordToDelete(null)}>
+            <AlertDialogCancel
+              onClick={() => setRecordToDelete(null)}
+              disabled={isDeleting}
+            >
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={performDelete}>
-              Delete
+            <AlertDialogAction onClick={performDelete} disabled={isDeleting}>
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                'Continue'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+export default function InBodyPage() {
+  return (
+    <AppLayout>
+      <InBodyPageContent />
     </AppLayout>
   );
 }

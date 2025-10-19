@@ -1,0 +1,64 @@
+name: Playwright Tests # Workflow name shown in GitHub Actions UI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+jobs:
+  test:
+    timeout-minutes: 60 # Fail job if it runs too long
+    runs-on: ubuntu-latest # Use latest Ubuntu runner
+    continue-on-error: true # Do not block merges even if this job fails
+    env:
+      NEXT_PUBLIC_USE_FIREBASE_EMULATORS: 'true' # Force web app to use emulators
+      NEXT_PUBLIC_FIREBASE_API_KEY: 'test' # Safe defaults so Next.js can boot
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'localhost'
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'demo-project'
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 'demo-project.appspot.com'
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '1234567890'
+      NEXT_PUBLIC_FIREBASE_APP_ID: '1:1234567890:web:abcdef'
+      NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: 'G-TESTME'
+    steps:
+      - uses: actions/checkout@v4 # Checkout repository code
+      - uses: actions/setup-node@v4 # Setup Node.js runtime
+        with:
+          node-version: lts/* # Use latest LTS Node
+      - name: Install dependencies # Install pnpm and project deps
+        run: npm install -g pnpm && pnpm install
+      - name: Install Playwright Browsers # Install browser binaries
+        run: pnpm exec playwright install --with-deps
+      - name: 'Start Firebase Emulators (project: demo-project)' # Launch Auth/Firestore emulators
+        run: |
+          npx firebase emulators:start --only auth,firestore --project demo-project &
+          npx wait-on tcp:8080 tcp:9099
+      - name: Seed Auth emulator user # Create login user for E2E
+        run: |
+          curl -s "http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=any" \
+            -H 'Content-Type: application/json' \
+            --data '{"email":"test-user@example.com","password":"password123","returnSecureToken":true}' || true
+      - name: Seed Firestore emulator exercises (minimum set) # Insert exercises used by tests
+        run: |
+          create_doc() {
+            local ID=$1
+            local TITLE=$2
+            curl -s -X POST "http://localhost:8080/v1/projects/demo-project/databases/(default)/documents/exercises?documentId=${ID}" \
+              -H 'Content-Type: application/json' \
+              --data "{\"fields\":{\"titleEn\":{\"stringValue\":\"${TITLE}\"},\"titleZh\":{\"stringValue\":\"\"},\"aliases\":{\"arrayValue\":{\"values\":[{\"stringValue\":\"${TITLE}\"}]}},\"force\":{\"stringValue\":\"\"},\"level\":{\"stringValue\":\"\"},\"mechanic\":{\"stringValue\":\"\"},\"bodyPart\":{\"stringValue\":\"\"},\"primaryMuscles\":{\"arrayValue\":{\"values\":[]}},\"secondaryMuscles\":{\"arrayValue\":{\"values\":[]}},\"equipment\":{\"stringValue\":\"\"},\"instructionsEn\":{\"arrayValue\":{\"values\":[]}},\"instructionsZh\":{\"arrayValue\":{\"values\":[]}},\"category\":{\"stringValue\":\"\"},\"thumbnailUrl\":{\"stringValue\":\"\"},\"isCardio\":{\"booleanValue\":false},\"type\":{\"stringValue\":\"global\"},\"createdBy\":{\"stringValue\":\"system\"}}}" \
+              >/dev/null || true
+          }
+          create_doc ex1 "Dumbbell Bench Press" # chest
+          create_doc ex2 "Cable Russian Twists" # core
+          create_doc ex3 "Barbell Squat" # legs
+          create_doc ex4 "Leg Press" # legs
+          create_doc ex5 "Pullups" # back
+          create_doc ex6 "Seated Cable Rows" # back
+          create_doc ex7 "Wide-Grip Lat Pulldown" # back
+          create_doc ex8 "Incline Dumbbell Press" # chest
+      - name: Run Playwright tests # Execute E2E tests
+        run: pnpm exec playwright test
+      - uses: actions/upload-artifact@v4 # Upload HTML report as artifact
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

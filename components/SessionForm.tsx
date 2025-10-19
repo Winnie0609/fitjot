@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { ExerciseSelect } from '@/components/ExerciseSelect';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,7 +53,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/lib/AuthContext';
 import { addWorkoutSession, updateWorkoutSession } from '@/lib/db';
 import {
-  type ExerciseDocument,
+  type Exercise as ExerciseDocument,
+  type ExerciseData,
   type Session,
   type WorkoutSessionDocument,
 } from '@/lib/types';
@@ -72,7 +74,9 @@ const setSchema = z.object({
 
 const exerciseSchema = z.object({
   id: z.string(),
-  name: z.string().min(1, 'Exercise name is required.'),
+  exerciseId: z.string().min(1, 'Exercise is required.'),
+  name: z.string().optional(),
+  // name: z.string().min(1, 'Exercise name is required.'),
   rpe: z
     .preprocess(
       (val) => (String(val).trim() === '' ? undefined : Number(val)),
@@ -89,7 +93,7 @@ const sessionSchema = z.object({
   exercises: z.array(exerciseSchema).min(1, 'Add at least one exercise.'),
 });
 
-type SessionFormData = z.infer<typeof sessionSchema>;
+export type SessionFormData = z.infer<typeof sessionSchema>;
 
 // Helper to create a new workout set
 const createNewSet = () => ({
@@ -101,6 +105,7 @@ const createNewSet = () => ({
 // Helper to create a new exercise
 const createNewExercise = () => ({
   id: crypto.randomUUID(),
+  exerciseId: '',
   name: '',
   sets: [createNewSet()],
 });
@@ -115,15 +120,18 @@ interface SessionFormProps {
   onSaved: (session: Session) => void;
   onClose: () => void;
   initialData?: Session | null;
+  exerciseData: ExerciseData[];
+  isFormOpen: boolean;
 }
 
 export function SessionForm({
   onSaved,
   onClose,
   initialData,
+  exerciseData,
 }: SessionFormProps) {
-  const [exerciseToDelete, setExerciseToDelete] = useState<number | null>(null);
   const { user } = useAuth();
+  const [exerciseToDelete, setExerciseToDelete] = useState<number | null>(null);
 
   const form = useForm<SessionFormData>({
     resolver: zodResolver(sessionSchema) as Resolver<SessionFormData>,
@@ -166,8 +174,9 @@ export function SessionForm({
       date: formData.date,
       exercises: formData.exercises.map((ex): ExerciseDocument => {
         const exerciseData: ExerciseDocument = {
-          id: ex.id,
-          name: ex.name,
+          id: crypto.randomUUID(),
+          exerciseId: ex.exerciseId,
+          name: ex.name || '',
           sets: ex.sets,
         };
         if (ex.rpe !== undefined) {
@@ -187,7 +196,7 @@ export function SessionForm({
           sessionData: sessionDocument as WorkoutSessionDocument,
         });
 
-        onSaved(deepClean({ ...formData, id: initialData.id }));
+        onSaved(deepClean({ ...formData, id: initialData.id }) as Session);
         toast.success(
           `Session for ${format(
             formData.date,
@@ -199,7 +208,7 @@ export function SessionForm({
           uid: user.uid,
           sessionData: sessionDocument as WorkoutSessionDocument,
         });
-        onSaved(deepClean({ ...formData, id: newDocRef.id }));
+        onSaved(deepClean({ ...formData, id: newDocRef.id }) as Session);
         toast.success(
           `Session for ${format(formData.date, 'dd MMM yyyy')} has been saved.`
         );
@@ -255,7 +264,7 @@ export function SessionForm({
                     </Popover>
                     <Input
                       type="time"
-                      className="w-[110px]"
+                      className="w-[145px]"
                       value={format(field.value, 'HH:mm:ss')}
                       onChange={(e) => {
                         const newDate = new Date(field.value);
@@ -307,6 +316,7 @@ export function SessionForm({
                 exIndex={exIndex}
                 control={form.control}
                 onRemoveRequest={() => setExerciseToDelete(exIndex)}
+                exerciseData={exerciseData}
               />
             ))}
             <Button
@@ -397,10 +407,12 @@ function ExerciseField({
   exIndex,
   control,
   onRemoveRequest,
+  exerciseData,
 }: {
   exIndex: number;
   control: Control<SessionFormData>;
   onRemoveRequest: () => void;
+  exerciseData: ExerciseData[];
 }) {
   const {
     fields: setFields,
@@ -412,23 +424,33 @@ function ExerciseField({
   });
 
   return (
-    <div className="border bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-lg space-y-4">
+    <div
+      className="border bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-lg space-y-4"
+      data-testid={`exercise-${exIndex}`}
+    >
+      {/* Exercise Name */}
       <div className="flex items-end gap-2">
         <FormField
           control={control}
-          name={`exercises.${exIndex}.name`}
+          name={`exercises.${exIndex}.exerciseId`}
           render={({ field }) => (
-            <FormItem data-testid="exercise-name-input" className="flex-1">
+            <FormItem className="flex-1">
               <FormLabel className="text-xs text-muted-foreground">
                 Exercise Name
               </FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Bench Press" {...field} />
+                <ExerciseSelect
+                  field={field}
+                  exerciseData={exerciseData}
+                  exIndex={exIndex}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* RPE */}
         <FormField
           control={control}
           name={`exercises.${exIndex}.rpe`}
@@ -473,9 +495,14 @@ function ExerciseField({
               control={control}
               name={`exercises.${exIndex}.sets.${setIndex}.reps`}
               render={({ field }) => (
-                <FormItem data-testid="reps-input" className="flex-1">
+                <FormItem className="flex-1">
                   <FormControl>
-                    <Input type="number" placeholder="12" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="12"
+                      data-testid="reps-input"
+                      {...field}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -484,9 +511,14 @@ function ExerciseField({
               control={control}
               name={`exercises.${exIndex}.sets.${setIndex}.weight`}
               render={({ field }) => (
-                <FormItem data-testid="weight-input" className="flex-1">
+                <FormItem className="flex-1">
                   <FormControl>
-                    <Input type="number" placeholder="50" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="50"
+                      data-testid="weight-input"
+                      {...field}
+                    />
                   </FormControl>
                 </FormItem>
               )}

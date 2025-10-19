@@ -1,12 +1,13 @@
-'use client';
-
 import { AppLayout } from '@/components/AppLayout';
 import { WorkoutDashboard } from '@/components/WorkoutDashboard';
+import { getExercises } from '@/lib/db';
 
-export default function WorkoutPage() {
+export default async function WorkoutPage() {
+  const exerciseData = await getExercises();
+
   return (
     <AppLayout>
-      <WorkoutDashboard />
+      <WorkoutDashboard exerciseData={exerciseData} />
     </AppLayout>
   );
 }

@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -12,10 +11,12 @@ import {
   Timestamp,
   updateDoc,
   where,
+  writeBatch,
 } from 'firebase/firestore';
 
 import { db } from './firebase';
 import {
+  ExerciseData,
   InBodyDataDocument,
   UserProfile,
   WorkoutSessionDocument,
@@ -24,6 +25,19 @@ import {
 const WORKOUT_SESSIONS_COLLECTION = 'workout_sessions';
 const USERS_COLLECTION = 'users';
 const IN_BODY_DATA_COLLECTION = 'in_body_data';
+const EXERCISES_COLLECTION = 'exercises';
+
+/**
+ * Helper function to mark a user as onboarded if they aren't already.
+ * This uses a merge write to avoid an extra read.
+ */
+function markUserAsOnboardedIfNeeded(
+  batch: ReturnType<typeof writeBatch>,
+  uid: string
+) {
+  const userDocRef = doc(db, USERS_COLLECTION, uid);
+  batch.set(userDocRef, { isOnboard: true }, { merge: true });
+}
 
 /**
  * Function to add a user to the database
@@ -95,10 +109,14 @@ const addWorkoutSession = async ({
     createdAt: serverTimestamp(),
   };
   try {
-    const docRef = await addDoc(
-      collection(db, WORKOUT_SESSIONS_COLLECTION),
-      data
-    );
+    const batch = writeBatch(db);
+    markUserAsOnboardedIfNeeded(batch, uid);
+
+    const docRef = doc(collection(db, WORKOUT_SESSIONS_COLLECTION));
+    batch.set(docRef, data);
+
+    await batch.commit();
+
     return docRef;
   } catch (error) {
     console.error('Error creating workout session:', error);
@@ -179,8 +197,21 @@ const addInBodyData = async ({
     uid: uid,
     createdAt: serverTimestamp(),
   } as Record<string, unknown>;
-  const docRef = await addDoc(collection(db, IN_BODY_DATA_COLLECTION), data);
-  return docRef;
+
+  try {
+    const batch = writeBatch(db);
+    markUserAsOnboardedIfNeeded(batch, uid);
+
+    const docRef = doc(collection(db, IN_BODY_DATA_COLLECTION));
+    batch.set(docRef, data);
+
+    await batch.commit();
+
+    return docRef;
+  } catch (error) {
+    console.error('Error creating inbody data:', error);
+    throw error;
+  }
 };
 
 const getInBodyData = async ({ uid }: { uid: string }) => {
@@ -228,12 +259,33 @@ const deleteInBodyData = async ({ recordId }: { recordId: string }) => {
   await deleteDoc(doc(db, IN_BODY_DATA_COLLECTION, recordId));
 };
 
+/*
+ * Functions to handle Exercises in the database
+ * get
+ */
+
+const getExercises = async (): Promise<ExerciseData[]> => {
+  const q = query(collection(db, EXERCISES_COLLECTION));
+  const snap = await getDocs(q);
+
+  const exercises = snap.docs.map(
+    (doc) =>
+      ({
+        id: doc.id,
+        ...doc.data(),
+      } as ExerciseData)
+  );
+
+  return exercises;
+};
+
 export {
   addInBodyData,
   addUserToDb,
   addWorkoutSession,
   deleteInBodyData,
   deleteWorkoutSession,
+  getExercises,
   getInBodyData,
   getUser,
   getWorkoutSessions,
