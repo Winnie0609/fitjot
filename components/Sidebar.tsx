@@ -105,16 +105,16 @@ export function Sidebar({ className }: SidebarProps) {
   const handleLogout = async () => {
     try {
       await auth.signOut();
-      toast.success('Logged out successfully');
+      toast.success('You have successfully logged out!');
       router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error('Failed to logout');
+      toast.error('There was an error logging out. Please try again.');
     }
   };
 
   const handleSettings = () => {
-    toast.info('Settings page coming soon');
+    toast.info('Settings page is coming soon!');
   };
 
   return (
