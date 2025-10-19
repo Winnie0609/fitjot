@@ -44,11 +44,9 @@ test.describe.serial('Workout Management', () => {
     // Step 2: Select an exercise using the custom combobox.
     await page.getByTestId('exercise-select').click();
     await page.getByPlaceholder('Search by name').fill('Bench Press');
-    const benchOption = page.getByRole('option', {
-      name: /dumbbell bench press/i,
-    });
-    await expect(benchOption).toBeVisible({ timeout: 10000 });
-    await benchOption.click();
+    await page
+      .getByRole('option', { name: 'Dumbbell Bench Press', exact: true })
+      .click();
 
     // Step 3: Fill in the sets for the first exercise.
     await page.getByTestId('weight-input').fill('60');
@@ -63,11 +61,9 @@ test.describe.serial('Workout Management', () => {
     await page.getByRole('button', { name: 'Add Exercise' }).click();
     await page.getByTestId('exercise-select').nth(1).click();
     await page.getByPlaceholder('Search by name').fill('Cable Russian Twists');
-    const cableOption = page.getByRole('option', {
-      name: /cable russian twists/i,
-    });
-    await expect(cableOption).toBeVisible({ timeout: 10000 });
-    await cableOption.click();
+    await page
+      .getByRole('option', { name: 'Cable Russian Twists', exact: true })
+      .click();
 
     // Step 5: Fill in the sets for the second exercise.
     await page.getByTestId('weight-input').nth(2).fill('100');
