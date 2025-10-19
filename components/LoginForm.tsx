@@ -76,11 +76,17 @@ export function LoginForm({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error(error.code, error.message);
-      if (error.code === 'auth/invalid-credential') {
+      const invalidCredentialCodes = new Set([
+        'auth/invalid-credential',
+        'auth/wrong-password',
+        'auth/user-not-found',
+        'auth/invalid-email',
+        'auth/invalid-login-credentials',
+      ]);
+      if (invalidCredentialCodes.has(error.code)) {
         toast.error('Invalid email or password.');
       } else {
         toast.error('There was an error logging in. Please try again.');
-        toast.error(error.message);
       }
     }
   };

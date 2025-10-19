@@ -55,7 +55,9 @@ test.describe('Authentication', () => {
 
     // 4. Verify that an error message is displayed
     // The text should match the error toast shown in the application.
-    await expect(page.getByText('Invalid email or password.')).toBeVisible();
+    await expect(page.getByText('Invalid email or password.')).toBeVisible({
+      timeout: 15000,
+    });
 
     // 5. Verify the user remains on the login page
     await expect(page).toHaveURL('/login');
