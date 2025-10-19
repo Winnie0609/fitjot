@@ -9,7 +9,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { Fragment } from 'react';
 import {
   ChevronDown,
   ChevronUp,
@@ -19,6 +18,7 @@ import {
   Smile,
   Trash2,
 } from 'lucide-react';
+import { Fragment } from 'react';
 import { useMemo } from 'react';
 
 import { Badge } from '@/components/ui/badge';
