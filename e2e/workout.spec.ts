@@ -121,10 +121,10 @@ test.describe.serial('Workout Management', () => {
     // Step 6: Re-open the session to verify the note was persisted.
     await firstSessionRow.click();
 
-    await firstSessionRow.click();
-
+    // Check that the note is visible, scoping the search to the desktop view
+    // to avoid strict mode violations from the mobile view also being in the DOM.
     await expect(
-      firstSessionRow.getByText(/Edited by Playwright/)
+      page.locator('.md\\:block').getByText(/Edited by Playwright/)
     ).toBeVisible();
   });
 
