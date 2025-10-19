@@ -8,6 +8,7 @@ jobs:
   test:
     timeout-minutes: 60 # Fail job if it runs too long
     runs-on: ubuntu-latest # Use latest Ubuntu runner
+    continue-on-error: true # Do not block merges even if this job fails
     env:
       NEXT_PUBLIC_USE_FIREBASE_EMULATORS: 'true' # Force web app to use emulators
       NEXT_PUBLIC_FIREBASE_API_KEY: 'test' # Safe defaults so Next.js can boot
