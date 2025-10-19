@@ -227,7 +227,7 @@ export function WorkoutDashboard({
       )}
 
       <AlertDialog
-        open={!!sessionToDelete && isDeleting}
+        open={!!sessionToDelete || (!!sessionToDelete && isDeleting)}
         onOpenChange={(open) => !open && setSessionToDelete(null)}
       >
         <AlertDialogContent>
