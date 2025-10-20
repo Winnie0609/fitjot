@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 
@@ -54,18 +54,22 @@ describe('InBodyForm', () => {
     });
   });
 
-  it('update flow: shows Saving..., calls update, success toast', async () => {
+  it('shows Saving..., calls update, success toast', async () => {
     const user = userEvent.setup();
-    // Make add not be called in this test; update is the target
-    (addInBodyData as unknown as Mock).mockResolvedValue({ id: 'x' });
-    (updateInBodyData as unknown as Mock).mockResolvedValue(undefined);
+
+    // Create a controllable promise to manage submission state
+    let resolveUpdate: (value?: unknown) => void;
+    const updatePromise = new Promise((resolve) => {
+      resolveUpdate = resolve;
+    });
+    (updateInBodyData as unknown as Mock).mockReturnValue(updatePromise);
 
     const initial = {
       id: 'rec-1',
       reportDate: new Date('2024-01-01T10:00:00Z'),
       reportTime: '10:00',
       bodyComposition: { totalWeight: { value: 70 } },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
     render(
@@ -77,13 +81,24 @@ describe('InBodyForm', () => {
     await user.clear(weightInput);
     await user.type(weightInput, '71');
 
-    // Click Save Record (bottom form)
-    await user.click(screen.getByRole('button', { name: /Save Record/i }));
+    // Click submit. The submission will start and then pause, waiting for our promise.
+    user.click(screen.getByRole('button', { name: /Save Record/i }));
 
-    // Button should show Saving... and be disabled
-    const savingBtn = await screen.findByRole('button', { name: /Saving.../i });
-    expect(savingBtn).toBeDisabled();
+    // The form is in a stable "submitting" state.
+    // Ensure both buttons are in their "Saving..." state.
+    const savingBtns = await screen.findAllByRole('button', {
+      name: /Saving.../i,
+    });
+    expect(savingBtns).toHaveLength(2);
+    expect(savingBtns[0]).toBeDisabled();
+    expect(savingBtns[1]).toBeDisabled();
 
+    // Manually resolve the promise to allow the submission to complete
+    await act(async () => {
+      resolveUpdate();
+    });
+
+    // Wait for the final success state
     await waitFor(() => {
       expect(updateInBodyData).toHaveBeenCalledTimes(1);
       expect(addInBodyData).not.toHaveBeenCalled();
@@ -103,7 +118,7 @@ describe('InBodyForm', () => {
     // Should show our refine message and not call API
     await waitFor(() => {
       expect(
-        screen.getByText('Either Weight or PBF is required')
+        screen.getByText(/Either Weight or PBF is required./i)
       ).toBeInTheDocument();
       expect(addInBodyData).not.toHaveBeenCalled();
     });
@@ -126,11 +141,7 @@ describe('InBodyForm', () => {
       expect(addInBodyData).not.toHaveBeenCalled();
       // Field-level message should render via <FormMessage />
       // Accept either phrasing depending on zod formatting
-      expect(
-        screen.getByText(
-          /cannot be negative|must be greater than or equal to 0/i
-        )
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Cannot be negative/i)).toBeInTheDocument();
     });
   });
 });
