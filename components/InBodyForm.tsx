@@ -73,7 +73,12 @@ const inBodyFormSchema = z
     bodyComposition: z
       .object({
         totalWeight: z
-          .object({ value: z.coerce.number().min(0).optional() })
+          .object({
+            value: z.coerce
+              .number()
+              .min(0, 'Weight cannot be negative')
+              .optional(),
+          })
           .optional(),
         skeletalMuscleMass: z
           .object({ value: z.coerce.number().min(0).optional() })
@@ -85,7 +90,12 @@ const inBodyFormSchema = z
           .object({ value: z.coerce.number().min(0).optional() })
           .optional(),
         pbf: z
-          .object({ value: z.coerce.number().min(0).optional() })
+          .object({
+            value: z.coerce
+              .number()
+              .min(0, 'PBF cannot be negative')
+              .optional(),
+          })
           .optional(),
       })
       .partial()
@@ -375,10 +385,14 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
               </div>
               <div className="flex justify-end">
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Quick Log'
                   )}
-                  Save Quick Log
                 </Button>
               </div>
             </form>
@@ -904,7 +918,14 @@ export function InBodyForm({ onSaved, onClose, initialData }: InBodyFormProps) {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving...' : 'Save Record'}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Record'
+                  )}
                 </Button>
               </div>
             </form>
