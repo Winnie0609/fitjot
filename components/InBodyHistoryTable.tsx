@@ -427,11 +427,8 @@ export function InBodyHistoryTable({
           );
         })}
       </div>
-
       {/* Pagination - shared for both views */}
-      <div className="sticky bottom-0 z-10 bg-white md:bg-transparent py-2 ">
-        <DataTablePagination table={table} />
-      </div>
+      <DataTablePagination table={table} />
     </div>
   );
 }
