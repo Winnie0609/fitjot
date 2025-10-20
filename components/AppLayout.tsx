@@ -49,11 +49,11 @@ function AppLayoutInner({
   // Dashboard layout with unified padding
   return (
     <AppDataProvider uid={user.uid}>
-      <div className="flex h-[100dvh] overflow-hidden">
+      <div className="fixed inset-0 flex h-screen w-screen overflow-hidden">
         <Sidebar />
         <main
           className={cn(
-            'flex-1 min-h-0 bg-muted/10 transition-all duration-300 overflow-y-auto ',
+            'flex-1 min-h-0 bg-muted/10 transition-all duration-300 overflow-y-auto',
             // Mobile: no margin (sidebar is overlay when open)
             'ml-0',
             // Desktop: margin based on sidebar state
