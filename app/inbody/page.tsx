@@ -105,7 +105,7 @@ function InBodyPageContent() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       <div className="flex justify-between items-center md:flex-row flex-col gap-4 items-start">
         <div>
           <h1 className="text-3xl font-bold">InBody Records</h1>
