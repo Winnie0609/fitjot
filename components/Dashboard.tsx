@@ -81,7 +81,7 @@ export function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       {/* Header */}
       <section className="flex justify-between gap-4 flex-col md:items-center md:flex-row items-start md:gap-0">
         <div>

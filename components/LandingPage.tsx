@@ -534,7 +534,7 @@ export function LandingPage() {
                   </a>
                   <a
                     target="_blank"
-                    href="https://github.com/Winnie0609/fitlog"
+                    href="https://github.com/Winnie0609/fitjot"
                     className="text-xs md:text-sm  hover:underline"
                   >
                     Source Code
