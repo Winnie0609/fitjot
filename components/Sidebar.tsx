@@ -140,7 +140,7 @@ export function Sidebar({ className }: SidebarProps) {
       <div
         className={cn(
           // Base styles
-          'flex h-screen flex-col border-r bg-background transition-all duration-300',
+          'flex h-[100svh] flex-col border-r bg-background transition-all duration-300',
           // Desktop: always visible, width changes based on collapsed state
           'hidden md:flex md:relative',
           isCollapsed ? 'md:w-16' : 'md:w-64',
