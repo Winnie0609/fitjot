@@ -360,6 +360,7 @@ export function InBodyHistoryTable({
                   </div>
                   <div className="flex items-center gap-1">
                     <Button
+                      aria-label="edit record"
                       variant="ghost"
                       size="sm"
                       onClick={(e) => {
@@ -370,6 +371,7 @@ export function InBodyHistoryTable({
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
+                      aria-label="delete record"
                       variant="ghost"
                       size="sm"
                       onClick={(e) => {

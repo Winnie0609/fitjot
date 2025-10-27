@@ -333,6 +333,7 @@ export function WorkoutHistoryTable({
                   </div>
                   <div className="flex items-center gap-1">
                     <Button
+                      aria-label="edit session"
                       variant="ghost"
                       size="sm"
                       onClick={(e) => {
@@ -343,6 +344,7 @@ export function WorkoutHistoryTable({
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
+                      aria-label="delete session"
                       variant="ghost"
                       size="sm"
                       onClick={(e) => {

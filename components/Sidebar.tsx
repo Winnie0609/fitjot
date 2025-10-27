@@ -129,6 +129,7 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Mobile menu button */}
       <Button
+        aria-label="open mobile menu"
         variant="ghost"
         size="icon"
         className="fixed top-4 left-4 z-50 md:hidden"
@@ -175,6 +176,7 @@ export function Sidebar({ className }: SidebarProps) {
                   width={96}
                   height={40}
                   className="w-full h-full object-contain"
+                  priority
                 />
               </div>
             )}
