@@ -16,5 +16,30 @@ export default defineConfig({
   test: {
     globals: true,
     css: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        'build/**',
+        '**/*.config.{js,ts,mjs}',
+        '**/*.d.ts',
+        '**/vitest.setup.{ts,js}',
+        'e2e/**',
+        'playwright-report/**',
+        'test-results/**',
+        '**/__tests__/**',
+        'scripts/**',
+        'service_account.json',
+        'storageState.json',
+      ],
+      // scope to business code
+      include: [
+        'components/**/*.{ts,tsx}',
+        'lib/**/*.{ts,tsx}',
+        'app/**/*.{ts,tsx}',
+      ],
+    },
   },
 });
