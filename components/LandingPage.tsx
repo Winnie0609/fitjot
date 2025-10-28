@@ -126,6 +126,7 @@ export function LandingPage() {
                 width={100}
                 height={100}
                 className="w-20 h-auto md:w-[100px] md:h-auto"
+                priority
               />
             </div>
 
@@ -346,6 +347,7 @@ export function LandingPage() {
                     width={200}
                     height={400}
                     className="md:w-full md:h-auto w-4/5 h-auto rounded-lg md:rounded-3xl"
+                    unoptimized
                   />
                 </div>
               </div>

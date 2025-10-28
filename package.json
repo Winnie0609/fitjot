@@ -11,7 +11,11 @@
     "test": "vitest --run -c vitest.config.unit.ts && vitest --run -c vitest.config.int.ts",
     "test:unit": "vitest -c vitest.config.unit.ts",
     "test:int": "vitest -c vitest.config.int.ts",
-    "test:ui": "vitest --ui -c vitest.config.unit.ts"
+    "test:ui": "vitest --ui -c vitest.config.unit.ts",
+    "test:coverage": "pnpm test:coverage:all",
+    "test:coverage:unit": "vitest --run --coverage -c vitest.config.unit.ts",
+    "test:coverage:int": "vitest --run --coverage -c vitest.config.int.ts",
+    "test:coverage:all": "pnpm test:coverage:unit && pnpm test:coverage:int"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -51,6 +55,7 @@
     "react-dom": "19.1.0",
     "react-firebase-hooks": "^5.1.1",
     "react-hook-form": "^7.62.0",
+    "recharts": "2.15.4",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tsx": "^4.20.5",
@@ -66,6 +71,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "3.2.4",
     "@vitest/ui": "^3.2.4",
     "dotenv": "^17.2.2",
     "eslint": "^9",

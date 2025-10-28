@@ -29,6 +29,31 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Preconnect to Firebase domains for faster connection */}
+        <link rel="dns-prefetch" href="https://www.googleapis.com" />
+        <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://workout-log-5615d.firebaseapp.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://firestore.googleapis.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://apis.google.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://www.googleapis.com"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100svh] overflow-x-hidden`}
       >
