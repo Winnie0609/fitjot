@@ -15,11 +15,16 @@ const CATALOG = {
     { id: 'EIvCqFt1ZDAcpuikSEIz', name: 'Pullups' },
     { id: 'TideaQ5oDN7cLiqeHjY3', name: 'Seated Cable Rows' },
     { id: 'VjTrXpOXTWBRKCRs1gzQ', name: 'Wide-Grip Lat Pulldown' },
+    { id: '85XaYBY6jGxR2GaJ1jQZ', name: 'Bent Over Barbell Row' },
   ],
   core: [
     { id: 'HpEc4Q06IANCZl8qwkdf', name: 'Crunches' },
     { id: 'nljN8RVYHGoiiUBbLbUg', name: 'Hanging Leg Raise' },
     { id: 'yI6ChLNLfbHNLH6DVy3K', name: 'Plank' },
+  ],
+  shoulders: [
+    { id: 'hxTDKv5fb332kZRwIzGx', name: 'Face Pull' },
+    { id: '6JZPNShRtQ3VHHQmAewk', name: 'Seated Dumbbell Press' },
   ],
 } as const;
 
@@ -28,7 +33,78 @@ export function getSampleWorkoutSessionsFor(
 ): WorkoutSessionDocument[] {
   const sessions: Omit<WorkoutSessionDocument, 'uid'>[] = [
     {
-      date: new Date('2025-07-21'),
+      date: new Date('2025-10-15'),
+      mood: 'neutral',
+      notes:
+        'Leg day! Focused on deep squats and solid form. Felt a great burn.',
+      exercises: [
+        {
+          id: 'exercise-1',
+          exerciseId: CATALOG.shoulders[0].id,
+          name: CATALOG.shoulders[0].name,
+          rpe: 8,
+          sets: [
+            { id: 'set-1', reps: 12, weight: 40 },
+            { id: 'set-2', reps: 12, weight: 40 },
+            { id: 'set-3', reps: 10, weight: 45 },
+          ],
+        },
+        {
+          id: 'exercise-2',
+          exerciseId: CATALOG.shoulders[1].id,
+          name: CATALOG.shoulders[1].name,
+          rpe: 7,
+          sets: [
+            { id: 'set-1', reps: 12, weight: 80 },
+            { id: 'set-2', reps: 12, weight: 80 },
+            { id: 'set-3', reps: 12, weight: 85 },
+          ],
+        },
+      ],
+    },
+    {
+      date: new Date('2025-10-16'),
+      mood: 'sad',
+      notes:
+        'Leg day! Focused on deep squats and solid form. Felt a great burn.',
+      exercises: [
+        {
+          id: 'exercise-1',
+          exerciseId: CATALOG.core[0].id,
+          name: CATALOG.core[0].name,
+          rpe: 8,
+          sets: [
+            { id: 'set-1', reps: 12, weight: 40 },
+            { id: 'set-2', reps: 12, weight: 40 },
+            { id: 'set-3', reps: 10, weight: 45 },
+          ],
+        },
+        {
+          id: 'exercise-2',
+          exerciseId: CATALOG.core[1].id,
+          name: CATALOG.core[1].name,
+          rpe: 7,
+          sets: [
+            { id: 'set-1', reps: 12, weight: 80 },
+            { id: 'set-2', reps: 12, weight: 80 },
+            { id: 'set-3', reps: 12, weight: 85 },
+          ],
+        },
+        {
+          id: 'exercise-3',
+          exerciseId: CATALOG.core[2].id,
+          name: CATALOG.core[2].name,
+          rpe: 7,
+          sets: [
+            { id: 'set-1', reps: 12, weight: 80 },
+            { id: 'set-2', reps: 12, weight: 80 },
+            { id: 'set-3', reps: 12, weight: 85 },
+          ],
+        },
+      ],
+    },
+    {
+      date: new Date('2025-10-21'),
       mood: 'happy',
       notes:
         'Leg day! Focused on deep squats and solid form. Felt a great burn.',
@@ -58,7 +134,7 @@ export function getSampleWorkoutSessionsFor(
       ],
     },
     {
-      date: new Date('2025-07-23'),
+      date: new Date('2025-10-23'),
       mood: 'neutral',
       notes:
         'Chest day. Bench press felt a bit heavy today but pushed through. Flyes were good.',
@@ -88,7 +164,7 @@ export function getSampleWorkoutSessionsFor(
       ],
     },
     {
-      date: new Date('2025-07-25'),
+      date: new Date('2025-10-25'),
       mood: 'happy',
       notes:
         'Back day was awesome. Had a great mind-muscle connection on the rows.',
@@ -118,7 +194,7 @@ export function getSampleWorkoutSessionsFor(
       ],
     },
     {
-      date: new Date('2025-07-26'),
+      date: new Date('2025-10-26'),
       mood: 'happy',
       notes: 'Finished the week with a solid core workout. Planks are killer.',
       exercises: [
@@ -154,7 +230,7 @@ export function getSampleWorkoutSessionsFor(
 export function getSampleInBodyDataFor(uid: string): InBodyDataDocument[] {
   const records: Omit<InBodyDataDocument, 'uid'>[] = [
     {
-      reportDate: new Date('2025-07-01'),
+      reportDate: new Date('2025-10-01'),
       reportTime: '08:00',
       overallScore: 72,
       bodyComposition: {
@@ -166,7 +242,7 @@ export function getSampleInBodyDataFor(uid: string): InBodyDataDocument[] {
       },
     },
     {
-      reportDate: new Date('2025-07-15'),
+      reportDate: new Date('2025-10-15'),
       reportTime: '08:10',
       overallScore: 74,
       bodyComposition: {
@@ -178,7 +254,7 @@ export function getSampleInBodyDataFor(uid: string): InBodyDataDocument[] {
       },
     },
     {
-      reportDate: new Date('2025-08-01'),
+      reportDate: new Date('2025-10-20'),
       reportTime: '08:05',
       overallScore: 75,
       bodyComposition: {
@@ -190,7 +266,7 @@ export function getSampleInBodyDataFor(uid: string): InBodyDataDocument[] {
       },
     },
     {
-      reportDate: new Date('2025-08-15'),
+      reportDate: new Date('2025-10-25'),
       reportTime: '07:55',
       overallScore: 77,
       bodyComposition: {
@@ -202,7 +278,7 @@ export function getSampleInBodyDataFor(uid: string): InBodyDataDocument[] {
       },
     },
     {
-      reportDate: new Date('2025-09-01'),
+      reportDate: new Date('2025-10-26'),
       reportTime: '08:00',
       overallScore: 79,
       bodyComposition: {
