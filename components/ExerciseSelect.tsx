@@ -2,7 +2,7 @@
 
 import Fuse from 'fuse.js';
 import { Check, ChevronsUpDown } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FieldValues, useFormContext } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ interface ExerciseSelectProps {
 const fuseOptions = {
   includeScore: true,
   keys: ['titleEn', 'titleZh', 'aliases'],
+  minMatchCharLength: 2,
 };
 
 export function ExerciseSelect({
@@ -43,7 +44,33 @@ export function ExerciseSelect({
   const [searchResults, setSearchResults] =
     useState<ExerciseData[]>(exerciseData);
 
-  const fuse = new Fuse(exerciseData, fuseOptions);
+  const fuseInstance = new Fuse(exerciseData, fuseOptions);
+
+  const performSearch = useCallback(
+    (query: string) => {
+      if (query.length > 0) {
+        const results = fuseInstance.search(query).map((result) => result.item);
+        setSearchResults(results);
+      } else {
+        setSearchResults(exerciseData);
+      }
+    },
+    [fuseInstance, exerciseData]
+  );
+
+  // Debounced search function, execute after 200ms
+  const handleSearch = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+    return (query: string) => {
+      // clear previous timer
+      clearTimeout(timeoutId);
+
+      // new timer, execute search after 200ms
+      timeoutId = setTimeout(() => {
+        performSearch(query);
+      }, 200);
+    };
+  }, [performSearch]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -75,14 +102,7 @@ export function ExerciseSelect({
         <Command>
           <CommandInput
             placeholder="Search by name"
-            onValueChange={(query) => {
-              if (query.length > 0) {
-                const results = fuse.search(query).map((result) => result.item);
-                setSearchResults(results);
-              } else {
-                setSearchResults(exerciseData);
-              }
-            }}
+            onValueChange={handleSearch}
           />
           <CommandList>
             <CommandEmpty>No exercise found.</CommandEmpty>
