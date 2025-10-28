@@ -20,6 +20,7 @@ interface AppDataContextValue {
   timeRange: 'week' | 'month' | 'all';
   setTimeRange: (range: 'week' | 'month' | 'all') => void;
   filteredWorkoutSessions: WorkoutSessionDocument[];
+  filteredInBodyRecords: (InBodyDataDocument & { id: string })[];
   // weeklySummaryData: { date: string; sessions: number; volume: number }[];
   // latestInBody: (Record<string, unknown> & { id: string }) | null;
   // topExercises: { exerciseId: string; name: string; count: number }[];
@@ -38,7 +39,7 @@ export function AppDataProvider({
   children: React.ReactNode;
 }) {
   const queryClient = useQueryClient();
-  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('week');
+  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('all');
 
   // Query for workout sessions with React Query
   const {
@@ -123,27 +124,14 @@ export function AppDataProvider({
     });
   }, [workoutSessions, rangeStartDate]);
 
-  // Summary computations moved to lib/summary.ts
-
-  // const topExercises = useMemo(() => {
-  //   const countMap = new Map<string, { name: string; count: number }>();
-  //   for (const s of sessions) {
-  //     for (const ex of s.exercises ?? []) {
-  //       const key = ex.exerciseId || ex.name;
-  //       const name = ex.name;
-  //       const prev = countMap.get(key) || { name, count: 0 };
-  //       prev.count += 1;
-  //       countMap.set(key, prev);
-  //     }
-  //   }
-  //   const arr = Array.from(countMap.entries()).map(([exerciseId, v]) => ({
-  //     exerciseId,
-  //     name: v.name,
-  //     count: v.count,
-  //   }));
-  //   arr.sort((a, b) => b.count - a.count);
-  //   return arr.slice(0, 5);
-  // }, [sessions]);
+  const filteredInBodyRecords = useMemo(() => {
+    if (!rangeStartDate) return inBodyRecords;
+    return inBodyRecords.filter((record) => {
+      if (!record.reportDate) return false;
+      const d = new Date(record.reportDate);
+      return d >= rangeStartDate;
+    });
+  }, [inBodyRecords, rangeStartDate]);
 
   const value: AppDataContextValue = {
     loading,
@@ -153,10 +141,9 @@ export function AppDataProvider({
     timeRange,
     setTimeRange,
     filteredWorkoutSessions,
+    filteredInBodyRecords,
     userProfile,
-    // weeklySummaryData,
-    // latestInBody,
-    // topExercises,
+
     refresh,
   };
 
