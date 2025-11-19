@@ -62,7 +62,7 @@ export function LoginForm({
       const user = userCredential.user;
 
       toast.success('You have successfully logged in!');
-      router.push('/');
+      router.push('/dashboard');
 
       await addUserToDb({
         uid: user.uid,

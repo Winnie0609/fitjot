@@ -44,7 +44,7 @@ interface SidebarProps {
 const navigationItems = [
   {
     title: 'Dashboard',
-    href: '/',
+    href: '/dashboard',
     icon: LayoutDashboard,
   },
   {
@@ -153,7 +153,7 @@ export function Sidebar({ className }: SidebarProps) {
         {/* Header */}
         <div
           className="flex h-12 items-center px-4 mt-2"
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/dashboard')}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {isCollapsed && !isMobileMenuOpen && (
@@ -185,7 +185,10 @@ export function Sidebar({ className }: SidebarProps) {
           <div className="flex justify-center items-center flex-shrink-0">
             <div
               className="cursor-pointer"
-              onClick={() => setIsCollapsed(!isCollapsed)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsCollapsed(!isCollapsed);
+              }}
               hidden={isCollapsed || isMobileMenuOpen}
             >
               <PanelLeftClose className="h-4 w-4" />
@@ -196,7 +199,10 @@ export function Sidebar({ className }: SidebarProps) {
             variant="ghost"
             size="icon"
             className="h-8 w-8 md:hidden flex-shrink-0"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMobileMenuOpen(false);
+            }}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -212,7 +218,10 @@ export function Sidebar({ className }: SidebarProps) {
                   !isMobileMenuOpen &&
                   'md:justify-center md:px-2 h-8 w-8'
               )}
-              onClick={() => setIsCollapsed(!isCollapsed)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsCollapsed(!isCollapsed);
+              }}
             >
               <PanelRightClose className="h-4 w-4" />
             </Button>

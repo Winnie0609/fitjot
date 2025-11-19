@@ -2,6 +2,7 @@ import './globals.css';
 
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import Script from 'next/script';
 
 import { Toaster } from '@/components/ui/sonner';
 
@@ -61,6 +62,12 @@ export default function RootLayout({
           {children}
           <Toaster />
         </Providers>
+        <Script
+          defer
+          strategy="afterInteractive"
+          src="https://cloud.umami.is/script.js"
+          data-website-id="c52965a1-2f6f-4197-a760-9524040c636e"
+        />
       </body>
     </html>
   );

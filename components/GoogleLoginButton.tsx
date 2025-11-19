@@ -50,7 +50,7 @@ export function GoogleLoginButton({ isLogin }: { isLogin: boolean }) {
         console.error(error);
       }
 
-      router.push('/');
+      router.push('/dashboard');
       toast.success('You have successfully logged in with Google!');
     } catch (error) {
       console.error(error);

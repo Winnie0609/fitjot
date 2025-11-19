@@ -222,9 +222,10 @@ export function LandingPage() {
               src="/images/hero.jpg"
               alt="Woman training at gym"
               width={500}
-              height={500}
+              height={312}
               className="w-full h-auto object-cover relative rounded-2xl overflow-hidden aspect-16/10"
               priority
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
         </div>
@@ -246,6 +247,7 @@ export function LandingPage() {
                   width={75}
                   height={75}
                   className="w-16 h-16 md:w-auto md:h-[75px]"
+                  loading="lazy"
                 />
               </div>
               <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4">
@@ -266,6 +268,7 @@ export function LandingPage() {
                   width={90}
                   height={90}
                   className="w-16 h-16 md:w-auto md:h-[80px]"
+                  loading="lazy"
                 />
               </div>
               <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4">
@@ -286,6 +289,7 @@ export function LandingPage() {
                   width={80}
                   height={80}
                   className="w-16 h-16 md:w-auto md:h-[75px]"
+                  loading="lazy"
                 />
               </div>
               <h3 className="text-lg md:text-xl font-bold mb-3 md:mb-4">
@@ -314,7 +318,13 @@ export function LandingPage() {
                     {item.label}
                   </span>
                 )}
-                <Image src="/images/logo.png" alt="" width={80} height={80} />
+                <Image
+                  src="/images/logo.png"
+                  alt=""
+                  width={80}
+                  height={80}
+                  loading="lazy"
+                />
               </div>
             ))}
           </div>
@@ -336,6 +346,7 @@ export function LandingPage() {
                     width={500}
                     height={500}
                     className="w-full h-auto"
+                    loading="lazy"
                   />
                 </div>
 
@@ -381,8 +392,9 @@ export function LandingPage() {
                   src="/images/analysis.jpg"
                   alt="Workout analytics dashboard with charts"
                   width={1000}
-                  height={1000}
+                  height={562}
                   className="w-full h-auto aspect-16/9 object-cover rounded-2xl"
+                  loading="lazy"
                 />
               </div>
             </div>
@@ -403,6 +415,7 @@ export function LandingPage() {
                   width={500}
                   height={500}
                   className="md:w-full md:h-auto w-3/4 h-auto"
+                  loading="lazy"
                 />
               </div>
 
@@ -465,6 +478,7 @@ export function LandingPage() {
                     width={250}
                     height={250}
                     className="w-full h-auto"
+                    loading="lazy"
                   />
                 </div>
               </div>

@@ -55,3 +55,8 @@ node_modules/
 # Sensitive files
 service_account.json
 storageState.json
+.cursor/
+
+# Note
+note/
+docs/

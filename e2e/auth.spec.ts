@@ -26,7 +26,7 @@ test.describe('Authentication', () => {
     ).toBeVisible({ timeout: 10000 });
 
     // Then wait for navigation to the dashboard
-    await expect(page).toHaveURL('/', { timeout: 15000 });
+    await expect(page).toHaveURL('/dashboard', { timeout: 15000 });
 
     // Finally, verify the dashboard content is loaded
     await expect(

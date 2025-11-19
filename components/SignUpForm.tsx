@@ -81,7 +81,7 @@ export function SignUpForm({
       });
 
       toast.success('You have successfully signed up!');
-      router.push('/');
+      router.push('/dashboard');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error(error.code, error.message);
